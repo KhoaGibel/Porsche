@@ -1,0 +1,13 @@
+{
+  "name": "glb-paint-analyzer",
+  "version": "1.0.0",
+  "description": "Tu dong phan tich file GLB va sinh config to mau",
+  "type": "module",
+  "scripts": {
+    "analyze": "node analyze-glb.js"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.0.0",
+    "@gltf-transform/extensions": "^4.0.0"
+  }
+}
