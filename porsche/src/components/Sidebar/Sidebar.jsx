@@ -3,6 +3,7 @@ import useCarStore from '../../store/useCarStore';
 import { CAR_DATA } from '../../data/carData';
 import './Sidebar.css';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import TestDriveModal from '../TestDriveModal/TestDriveModal';
 
 export default function Sidebar() {
   const theme         = useCarStore((state) => state.theme);
@@ -12,6 +13,7 @@ export default function Sidebar() {
   const isMobile = useIsMobile();
   // Nếu store chưa có activeCar, fallback về 'GT3 RS'
   const activeCar = useCarStore((state) => state.activeCar) ?? 'GT3 RS';
+  const [showTestDrive, setShowTestDrive] = useState(false);
 
   const [activeTab, setActiveTab]       = useState('specs');   // 'specs' | 'colors'
   const [selectedColor, setSelectedColor] = useState(null);
@@ -218,14 +220,24 @@ export default function Sidebar() {
       {/* ══════════════════════════════════
           FOOTER — nút lái thử giữ nguyên gốc
       ══════════════════════════════════ */}
-      <div className={`px-8 py-6 border-t ${divider}`}>
-        <button className="btn-test-drive w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest rounded-xl transition-colors duration-200 shadow-lg">
-          Đăng ký lái thử
-        </button>
-        <p className={`text-center text-xs mt-3 ${textSub}`}>
-          Hoặc gọi <span className={`font-bold ${textMain}`}>1800 599 946</span>
-        </p>
-      </div>
+<div className={`px-8 py-6 border-t ${divider}`}>
+  <button
+    className="btn-test-drive w-full py-4 bg-red-600 hover:bg-red-700
+      text-white font-bold uppercase tracking-widest rounded-xl
+      transition-colors duration-200 shadow-lg"
+    onClick={() => setShowTestDrive(true)}
+  >
+    Đăng ký lái thử
+  </button>
+  <p className={`text-center text-xs mt-3 ${textSub}`}>
+    Hoặc gọi <span className={`font-bold ${textMain}`}>1800 599 946</span>
+  </p>
+</div>
+ 
+{showTestDrive && (
+  <TestDriveModal onClose={() => setShowTestDrive(false)} />
+)}
+*/
 
     </div>
   );

@@ -112,7 +112,7 @@
 @media (min-width: 1024px) {
   .history-dark-box {
     transform: translateY(-2rem); 
-    width: 125%;
+    width: 120%;
   }
 }
 

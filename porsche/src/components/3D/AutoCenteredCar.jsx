@@ -5,19 +5,27 @@ import * as THREE from 'three';
 import useCarStore from '../../store/useCarStore';
 import { CAR_DATA } from '../../data/carData';
 
+// 🚀 1. TỪ ĐIỂN XE: Cấu hình riêng biệt cho từng mẫu xe
 export const MODEL_REGISTRY = {
-  'GT3 RS': { glbPath: '/models/gt3rs.glb' },
-  // 'GT3':         { glbPath: '/models/gt3.glb' },
-  // '911 TURBO S': { glbPath: '/models/turbos.glb' },
-};
-
-const isBodyMaterial = (matName) => {
-  const n = (matName || '').toLowerCase();
-  if (n.includes('carbon')) return false;
-  if (n === 'material.005') return true;
-  if (n.includes('coloured_material')) return true;
-  return ['base_material', 'paint_material', 'carpaint', 'car_body']
-    .some((kw) => n.includes(kw));
+  'GT3 RS': { 
+    glbPath: '/models/gt3rs.glb',
+    paintableMaterials: ['material.005', 'material_0'], 
+    accentMaterials: [
+      'carbon1_material.001', 
+      'carbon1_material.003', 
+      'coloured_material.001'
+    ]
+  },
+  'GT3': { 
+    glbPath: '/models/gt3.glb',
+    paintableMaterials: ['carpaint', 'body_color'],
+    accentMaterials: ['hood', 'wing'] 
+  },
+  '911 TURBO S': { 
+    glbPath: '/models/turbos.glb',
+    paintableMaterials: ['coloured_material'],
+    accentMaterials: [] 
+  },
 };
 
 export default function AutoCenteredCar({ scale = 1 }) {
@@ -29,18 +37,20 @@ export default function AutoCenteredCar({ scale = 1 }) {
   const modelInfo = MODEL_REGISTRY[activeCar] ?? MODEL_REGISTRY['GT3 RS'];
   const { scene } = useGLTF(modelInfo.glbPath);
 
-  // ── Effect 1: center + fix transmission ──
+  // ── Effect 1: Căn giữa xe + Đặt bánh xe chạm đất ──
   useEffect(() => {
-    if (!scene) return;
+    if (!scene || !groupRef.current) return;
 
     const box = new THREE.Box3().setFromObject(scene);
     const center = box.getCenter(new THREE.Vector3());
-    scene.position.sub(center);
+
+    groupRef.current.position.set(-center.x, -box.min.y, -center.z);
 
     scene.traverse((child) => {
       if (!child.isMesh) return;
       child.castShadow = true;
-      child.receiveShadow = true;
+      child.receiveShadow = false; 
+      
       const mat = child.material;
       if (!mat) return;
       if (mat.transmission > 0) {
@@ -49,7 +59,6 @@ export default function AutoCenteredCar({ scale = 1 }) {
         mat.opacity = 1;
         mat.needsUpdate = true;
       }
-      // ✅ Tăng envMapIntensity cao hơn — ánh sáng môi trường rõ hơn
       if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
         mat.envMapIntensity = 2.5;
         mat.needsUpdate = true;
@@ -59,12 +68,11 @@ export default function AutoCenteredCar({ scale = 1 }) {
     invalidate();
   }, [scene, invalidate]);
 
-  // ── Effect 2: sơn thân xe ──
+  // ── Effect 2: Sơn thân xe & Xử lý tương phản (Contrast Logic) ──
   useEffect(() => {
     if (!scene || !carColor) return;
 
     const targetColor = new THREE.Color(carColor);
-
     const carData = CAR_DATA[activeCar];
     const selectedColorData = carData?.colors.find(
       (c) => c.hex.toLowerCase() === carColor.toLowerCase()
@@ -74,39 +82,72 @@ export default function AutoCenteredCar({ scale = 1 }) {
     const metalness  = selectedColorData?.metalness  ?? 0.6;
     const isMetallic = selectedColorData?.metallic   ?? false;
 
+    // 🔥 Kích hoạt trạng thái "Xe Đen"
+    const isBlackCar = carColor.toLowerCase() === '#000000' || carColor.toLowerCase() === '#111111';
+
+    // Nhận diện thân xe chính
+    const isPaintable = (matName) => {
+      if (!matName) return false;
+      const name = matName.toLowerCase();
+      if (['carbon', 'glass', 'tire', 'window'].some(k => name.includes(k))) return false;
+      return (modelInfo.paintableMaterials || []).some(allowed => name.includes(allowed.toLowerCase()));
+    };
+
+    // Nhận diện bộ phận tương phản
+    const isAccent = (matName) => {
+      if (!matName) return false;
+      const name = matName.toLowerCase();
+      if (['tire', 'wheel', 'brake', 'caliper', 'rim', 'glass'].some(k => name.includes(k))) return false;
+      return (modelInfo.accentMaterials || []).some(a => name.includes(a.toLowerCase()));
+    };
+
     scene.traverse((child) => {
       if (!child.isMesh || !child.material) return;
+      const matName = child.material.name;
 
-      if (isBodyMaterial(child.material.name)) {
+      // 1. SƠN THÂN XE CHÍNH
+      if (isPaintable(matName)) {
         const newMat = child.material.clone();
-
-        // ✅ CHỈ lột map (base color texture) — KHÔNG lột normalMap
-        // normalMap giữ lại để bề mặt xe có chiều sâu, không phẳng lì
         newMat.map = null;
         newMat.roughnessMap = null;
         newMat.metalnessMap = null;
-        // newMat.normalMap = null  ← KHÔNG làm dòng này nữa
         newMat.vertexColors = false;
 
         newMat.color.set(targetColor);
         newMat.roughness  = roughness;
         newMat.metalness  = metalness;
-
-        // ✅ Clearcoat — lớp phủ bóng kính đặc trưng sơn xe cao cấp
         newMat.clearcoat = 1.0;
         newMat.clearcoatRoughness = isMetallic ? 0.12 : 0.04;
-
-        // ✅ Tăng envMapIntensity riêng cho material thân xe
-        // để phản chiếu môi trường rõ hơn — tạo cảm giác sơn bóng sâu
         newMat.envMapIntensity = 3.0;
 
+        newMat.needsUpdate = true;
+        child.material = newMat;
+      } 
+      
+      // 2. SƠN BỘ PHẬN TƯƠNG PHẢN (NẮP CAPO/CÁNH GIÓ)
+      else if (isAccent(matName)) {
+        const newMat = child.material.clone();
+        newMat.map = null;
+        
+        if (isBlackCar) {
+          // Nắp capo chuyển Trắng bóng
+          newMat.color.set('#ffffff');
+          newMat.roughness = 0.2;
+          newMat.metalness = 0.5;
+        } else {
+          // Nắp capo trả về Đen nhám Carbon
+          newMat.color.set('#1a1a1a'); 
+          newMat.roughness = 0.6;
+          newMat.metalness = 0.3;
+        }
+        
         newMat.needsUpdate = true;
         child.material = newMat;
       }
     });
 
     invalidate();
-  }, [scene, carColor, activeCar, invalidate]);
+  }, [scene, carColor, activeCar, invalidate, modelInfo]);
 
   // ── Click debug ──
   const handleClick = (e) => {

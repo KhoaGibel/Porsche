@@ -11,12 +11,13 @@ import {
 } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey:            "883615877817",
-  authDomain:        "Showroom.firebaseapp.com",
-  projectId:         "showroom-4809b",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID",
+  apiKey: "AIzaSyAfu4EKF3MQcrCj1DX0S3PGj9AfiwYwI7s",
+  authDomain: "showroom-4809b.firebaseapp.com",
+  projectId: "showroom-4809b",
+  storageBucket: "showroom-4809b.firebasestorage.app",
+  messagingSenderId: "883615877817",
+  appId: "1:883615877817:web:2b78a00e9c6765d4d9e968",
+  measurementId: "G-FNKWHSBFF7"
 };
 
 const app = initializeApp(firebaseConfig);
