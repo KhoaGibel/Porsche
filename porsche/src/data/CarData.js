@@ -1,12 +1,4 @@
-/**
- * Dữ liệu xe Porsche — màu sơn chính xác theo Porsche factory
- * 
- * Mỗi màu có thêm:
- *   - hex: mã màu hex chuẩn Porsche (lấy từ factory color database)
- *   - metallic: true/false — ảnh hưởng đến roughness/metalness trong 3D
- *   - roughness: độ nhám sơn (0 = gương, 1 = mờ hoàn toàn)
- *   - metalness: độ kim loại (0 = sơn thường, 1 = full metallic)
- */
+
 
 export const CAR_DATA = {
 

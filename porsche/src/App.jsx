@@ -5,7 +5,7 @@ import { useIsMobile } from './hooks/useIsMobile';
 import './App.css';
 
 import AutoCenteredCar from './components/3D/AutoCenteredCar';
-import Sidebar from './components/Sidebar/Sidebar.jsx';
+import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import HeroSection from './components/HeroSection/HeroSection.jsx';
 import SpotlightRig from './components/3D/SpotlightRig';
