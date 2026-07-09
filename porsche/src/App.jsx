@@ -8,7 +8,6 @@ import AutoCenteredCar from './components/3D/AutoCenteredCar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import HeroSection from './components/HeroSection/HeroSection.jsx';
-import SpotlightRig from './components/3D/SpotlightRig';
 import useCarStore from './store/useCarStore';
 import HistorySection from './components/HistorySection/HistorySection'
 
@@ -23,10 +22,8 @@ const gt3rsImageUrl  = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/v17827
 const historyBgUrl     = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg';
 
 export default function App() {
-  const theme         = useCarStore((state) => state.theme);
   const isSidebarOpen = useCarStore((state) => state.isSidebarOpen);
   const toggleSidebar = useCarStore((state) => state.toggleSidebar);
-  const activeCar     = useCarStore((state) => state.activeCar);
   const setActiveCar  = useCarStore((state) => state.setActiveCar);
   const isMobile      = useIsMobile();
 
@@ -68,9 +65,8 @@ export default function App() {
       <section
         id="3d-showroom"
         className="section-snap relative overflow-hidden"
-        style={{ background: '#080808' }}
+        style={{ background: '#ffffff' }} // Nền đen tuyền
       >
-        {/* ── Canvas wrapper ── */}
         <div className={`canvas-wrapper transition-all duration-500
           ${!isMobile && isSidebarOpen ? 'w-full md:w-[calc(100%-24rem)]' : 'w-full'}`}
         >
@@ -81,24 +77,11 @@ export default function App() {
             performance={{ min: isMobile ? 0.3 : 0.5 }}
             shadows="soft"
           >
-            {/* ── Spotlight rig — ánh sáng rọi từ trên cao như bóng đèn showroom ── */}
-            <SpotlightRig />
-
-            {/* ── Ambient rất thấp — nền tối, xe nổi bật ── */}
-            <ambientLight intensity={0.08} />
-
             <Suspense fallback={null}>
-              {/* Xe — với slide animation */}
-              <group
-                position={[
-                  slideDir === 'right' ? -3 : slideDir === 'left' ? 3 : 0,
-                  0, 0
-                ]}
-              >
+              <group position={[ slideDir === 'right' ? -3 : slideDir === 'left' ? 3 : 0, 0, 0 ]}>
                 <AutoCenteredCar scale={1} />
               </group>
-
-              {/* Bóng đổ trên sàn */}
+              <Environment files="https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/grasslands_sunset_1k.hdr" background />
               <ContactShadows
                 resolution={isMobile ? 256 : 1024}
                 frames={1}
@@ -110,17 +93,7 @@ export default function App() {
               />
             </Suspense>
 
-            <OrbitControls
-              target={[0, 1, 0]}
-              enableDamping
-              dampingFactor={0.08}
-              makeDefault
-              minPolarAngle={0.2}
-              maxPolarAngle={Math.PI / 2.2}
-              minDistance={3}
-              maxDistance={12}
-              enablePan={false}
-            />
+            <OrbitControls target={[0, 1, 0]} enableDamping dampingFactor={0.08} makeDefault minPolarAngle={0.2} maxPolarAngle={Math.PI / 2.2} minDistance={3} maxDistance={12} enablePan={false} />
           </Canvas>
 
           {/* Loading bar */}

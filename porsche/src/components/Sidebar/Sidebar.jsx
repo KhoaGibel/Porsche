@@ -237,7 +237,6 @@ export default function Sidebar() {
 {showTestDrive && (
   <TestDriveModal onClose={() => setShowTestDrive(false)} />
 )}
-*/
 
     </div>
   );

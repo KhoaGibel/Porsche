@@ -13,7 +13,7 @@ export default function SpotlightRig() {
         ref={mainSpot}
         position={[0, 7, 6]}       
         target-position={[0, 0, 0]}
-        intensity={400}            
+        intensity={150}            
         distance={25}
         angle={0.8}                
         penumbra={0.6}             
@@ -62,7 +62,7 @@ export default function SpotlightRig() {
         ref={rimSpot}
         position={[-4, 5, -6]}
         target-position={[0, 0.5, 0]}
-        intensity={250}
+        intensity={80}
         distance={20}
         angle={0.7}
         penumbra={0.5}
