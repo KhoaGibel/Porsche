@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // ⚠️ Dán cái API Key bạn vừa copy ở Bước 1 vào giữa 2 dấu nháy kép này:
-const API_KEY = "AQ.Ab8RN6KsRmUUhk9x0x0zzkrAUoY3OxjXyAzUCAkf1PzbAVGGXw"; 
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 

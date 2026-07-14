@@ -16,7 +16,7 @@ export default function HeroVideo() {
         playsInline 
         className="absolute top-0 left-0 w-full h-full object-cover z-0"
       >
-        <source src="/videos/PorscheHero.mp4" type="video/mp4" />
+        <source src="https://res.cloudinary.com/dq8xgcqhk/video/upload/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4" type="video/mp4" />
       </video>
 
       {/* 3. NỘI DUNG CHỮ HIỆN RA MƯỢT MÀ VỚI FRAMER MOTION */}
