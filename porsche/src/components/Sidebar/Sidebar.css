@@ -1,3 +1,4 @@
+/* ── Cuộn màu xám nhạt cho nền trắng ── */
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -5,13 +6,10 @@
   background: transparent;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #d1d5db; 
   border-radius: 99px;
 }
-.sidebar-scroll.light::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-}
- 
+
 /* ── Tab switch animation ── */
 .sidebar-tab-content {
   animation: tabFadeIn 0.2s ease;
@@ -20,7 +18,7 @@
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0);   }
 }
- 
+
 /* ── Colour swatch ring khi selected ── */
 .color-swatch {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -31,12 +29,12 @@
 .color-swatch.selected {
   transform: scale(1.12);
 }
- 
+
 /* ── Spec row — subtle separator ── */
 .spec-row + .spec-row {
-  border-top-width: 0; /* dùng gap thay vì border chồng */
+  border-top-width: 0; 
 }
- 
+
 /* ── Nút lái thử — pulse khi hover ── */
 .btn-test-drive {
   position: relative;
@@ -46,7 +44,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.08); 
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -56,7 +54,7 @@
 .btn-test-drive:active {
   transform: scale(0.98);
 }
- 
+
 /* ── Badge giá ── */
 .price-badge {
   display: inline-block;
@@ -67,14 +65,7 @@
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   margin-top: 0.75rem;
-}
-.price-badge.dark {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e0e0e0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.price-badge.light {
-  background: rgba(0, 0, 0, 0.06);
-  color: #333;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f3f4f6;
+  color: #111111;
+  border: 1px solid #d1d5db;
 }

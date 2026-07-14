@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -16,50 +16,58 @@ export const MODEL_REGISTRY = {
   },
   'GT3': {
     glbPath: '/models/gt3_opt.glb',
-    scale: 110,                 // Phóng to ~110 lần dựa trên tỷ lệ thật trong log của bạn (0.013m -> 1.43m)
-    rotationY: -Math.PI / 2,    // Giúp mũi chiếc GT3 hướng thẳng ra phía trước
-    positionOffset: [0, 0, 0],  // Khóa chặt tại tâm sân khấu
-    paintableMaterials: ['coat', 'carpaint', 'body_color'],
+    scale: 110,                 
+    rotationY: -Math.PI / 2,    
+    positionOffset: [0, 0, 0],  
+    paintableMaterials: ['paint'], // 🎯 Đã áp dụng từ khóa bắn tỉa chuẩn
     accentMaterials:    ['hood', 'wing'],
   },
   '911 TURBO S': {
     glbPath: '/models/turbos_opt.glb',
-    scale: 110,                   // ⚠️ ĐÃ SỬA: Đưa về 1 (kích thước gốc file này đã là ~1.42m rồi, để 75 sẽ bị khổng lồ)
+    scale: 110,                   
     rotationY: 0,
-    positionOffset: [0, 0, 0],
-    paintableMaterials: ['body_main'],
+    positionOffset: [0, 0, 0],  
+    paintableMaterials: ['palettematerial005', 'regiona_1'], // 🎯 Đã áp dụng từ khóa bắn tỉa chuẩn
     accentMaterials:    [],
   },
 };
 
 export default function AutoCenteredCar() {
-  const activeCar  = useCarStore((state) => state.activeCar) ?? 'GT3 RS';
-  const carColor   = useCarStore((state) => state.carColor);
-  const invalidate = useThree((state) => state.invalidate);
+  const activeCar   = useCarStore((state) => state.activeCar) ?? 'GT3 RS';
+  const carColor    = useCarStore((state) => state.carColor);
+  
+  // Lấy thêm hàm setCarColor từ store để có thể reset màu
+  const setCarColor = useCarStore((state) => state.setCarColor); 
+  const invalidate  = useThree((state) => state.invalidate);
 
   const modelInfo = MODEL_REGISTRY[activeCar] ?? MODEL_REGISTRY['GT3 RS'];
-  const { scene } = useGLTF(modelInfo.glbPath);
+  
+  // ── Bước 0: CLONE (NHÂN BẢN) ĐỂ GIỮ NGUYÊN MÀU GỐC ──
+  // Thay vì dùng thẳng bản gốc, chúng ta copy ra một bản để nếu carColor = null, nó sẽ hiện bản gốc này!
+  const { scene: originalScene } = useGLTF(modelInfo.glbPath);
+  const scene = useMemo(() => originalScene.clone(), [originalScene]);
 
-  // ── Bước 1: Tính toán tâm hình học thuần khiết (Chống hoàn toàn lỗi Cache khi chuyển Tab) ──
+  // ── MỚI: TỰ ĐỘNG XÓA MÀU KHI CHUYỂN XE KHÁC ──
+  useEffect(() => {
+    if (setCarColor) {
+      setCarColor(null); // Trả carColor về null để hiển thị màu gốc
+    }
+  }, [activeCar, setCarColor]);
+
+  // ── Bước 1: Tính toán tâm hình học thuần khiết ──
   const { center, minY } = useMemo(() => {
     if (!scene) return { center: new THREE.Vector3(), minY: 0 };
-
-    // Khôi phục trạng thái nguyên bản của file 3D để đo chính xác, xóa vết lỗi cũ
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
     scene.scale.set(1, 1, 1);
     scene.updateMatrixWorld(true);
-
     const box = new THREE.Box3().setFromObject(scene);
-    const c = box.getCenter(new THREE.Vector3());
-    
-    return { center: c, minY: box.min.y };
+    return { center: box.getCenter(new THREE.Vector3()), minY: box.min.y };
   }, [scene]);
 
   // ── Bước 2: Khử lỗi xuyên thấu vật liệu bề mặt ──
   useEffect(() => {
     if (!scene) return;
-
     scene.traverse((child) => {
       if (!child.isMesh) return;
       child.castShadow    = true;
@@ -77,12 +85,13 @@ export default function AutoCenteredCar() {
         mat.needsUpdate     = true;
       }
     });
-
     invalidate();
   }, [scene, invalidate]);
 
   // ── Bước 3: Đổi màu sơn vỏ xe ──
   useEffect(() => {
+    // 💡 ĐIỂM QUAN TRỌNG: Nếu chưa chọn màu (carColor = null), code sẽ DỪNG LẠI TẠI ĐÂY
+    // Lúc này chiếc xe đang là bản clone nên nó sẽ giữ 100% texture và màu gốc!
     if (!scene || !carColor) return;
 
     const targetColor = new THREE.Color(carColor);
@@ -97,29 +106,39 @@ export default function AutoCenteredCar() {
     const isBlackCar = ['#000000', '#0a0a0a', '#0d0d0d', '#111111']
       .includes(carColor.toLowerCase());
 
-    const isPaintable = (matName) => {
-      if (!matName) return false;
-      const n = matName.toLowerCase();
-      if (['carbon', 'glass', 'tire', 'window', 'wheel', 'rim']
-        .some(k => n.includes(k))) return false;
+    // Đã phục hồi hàm kiểm tra CHUẨN XÁC soi cả Mesh Name và Mat Name để bảo vệ bánh xe
+    const isPaintable = (child) => {
+      const meshName = (child.name || '').toLowerCase();
+      const matName  = (child.material?.name || '').toLowerCase();
+      
+      const blackList = [
+        'tire', 'wheel', 'rim', 'brake', 'caliper', 'disc', 'alloy', 'rubber',
+        'carbon', 'plastic', 'grill', 'mesh', 'black_matte', 
+        'glass', 'window', 'mirror', 'light', 'lamp', 'lens',
+        'logo', 'badge', 'interior', 'seat', 'engine', 'exhaust'
+      ];
+
+      if (blackList.some(k => meshName.includes(k) || matName.includes(k))) return false;
+      
+      if (modelInfo.paintableMaterials?.includes('*')) return true;
+
       return (modelInfo.paintableMaterials ?? [])
-        .some(p => n.includes(p.toLowerCase()));
+        .some(p => matName.includes(p.toLowerCase()) || meshName.includes(p.toLowerCase()));
     };
 
-    const isAccent = (matName) => {
-      if (!matName) return false;
-      const n = matName.toLowerCase();
-      if (['tire', 'wheel', 'brake', 'rim', 'glass']
-        .some(k => n.includes(k))) return false;
+    const isAccent = (child) => {
+      const meshName = (child.name || '').toLowerCase();
+      const matName  = (child.material?.name || '').toLowerCase();
+      if (['tire', 'wheel', 'brake', 'rim', 'glass', 'window']
+        .some(k => meshName.includes(k) || matName.includes(k))) return false;
       return (modelInfo.accentMaterials ?? [])
-        .some(a => n.includes(a.toLowerCase()));
+        .some(a => matName.includes(a.toLowerCase()) || meshName.includes(a.toLowerCase()));
     };
 
     scene.traverse((child) => {
       if (!child.isMesh || !child.material) return;
-      const matName = child.material.name;
 
-      if (isPaintable(matName)) {
+      if (isPaintable(child)) {
         const m = child.material.clone();
         m.map                = null;
         m.roughnessMap       = null;
@@ -134,7 +153,7 @@ export default function AutoCenteredCar() {
         m.needsUpdate        = true;
         child.material       = m;
 
-      } else if (isAccent(matName)) {
+      } else if (isAccent(child)) {
         const m = child.material.clone();
         m.map = null;
         if (isBlackCar) {
@@ -150,13 +169,7 @@ export default function AutoCenteredCar() {
     invalidate();
   }, [scene, carColor, activeCar, invalidate, modelInfo]);
 
-  // ── Click debug ──
-  const handleClick = (e) => {
-    e.stopPropagation();
-    console.log('🎯', e.object.name, '| Mat:', e.object.material?.name);
-  };
-
-  // ── Bước 4: Khung bọc khai báo (Declarative Group Wrapping) ──
+  // ── Bước 4: Khung bọc khai báo ──
   const offset = modelInfo.positionOffset || [0, 0, 0];
 
   return (
@@ -165,7 +178,6 @@ export default function AutoCenteredCar() {
         <primitive 
           object={scene} 
           position={[-center.x, -minY, -center.z]} 
-          onPointerDown={handleClick} 
         />
       </group>
     </group>

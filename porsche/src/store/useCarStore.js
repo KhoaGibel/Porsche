@@ -3,7 +3,7 @@ import { create } from 'zustand';
 const useCarStore = create((set) => ({
   // QUẢN LÝ FILE 3D VÀ MÀU SẮC
   currentCarPath: '/porsche.glb',
-  carColor: '#00d9ff',
+  carColor: 'null',
   
   // QUẢN LÝ GIAO DIỆN (THEME & SIDEBAR)
   theme: 'light', 

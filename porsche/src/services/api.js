@@ -1,6 +1,3 @@
-// src/services/api.js
-// ── Tất cả calls đến backend Express/MongoDB ──
-
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 // Helper lấy JWT token từ localStorage
@@ -66,8 +63,34 @@ export const userAPI = {
   bookTestDrive: (body) =>
     authFetch('/users/test-drives', { method: 'POST', body: JSON.stringify(body) }),
 
-  // Lấy danh sách lịch lái thử
+  // Lấy danh sách lịch lái thử (Hàng thật kết nối MongoDB của Khoa)
   getTestDrives: () => authFetch('/users/test-drives'),
+};
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTION (Gói đăng ký dịch vụ bổ sung)
+// ─────────────────────────────────────────────
+export const subAPI = {
+  getMySub: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          subscription: {
+            plan: 'premium',
+            status: 'active',
+            startDate: new Date().toISOString(),
+            endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+            renewsAt: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          }
+        });
+      }, 500);
+    });
+  },
+  cancel: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ success: true }), 500);
+    });
+  }
 };
 
 // ─────────────────────────────────────────────

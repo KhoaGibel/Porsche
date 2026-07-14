@@ -1,8 +1,4 @@
-// src/firebase.js
-// ─────────────────────────────────────────────────────
-// Thay thế các giá trị bên dưới bằng config từ Firebase Console
-// https://console.firebase.google.com → Project Settings → Your apps
-// ─────────────────────────────────────────────────────
+
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,

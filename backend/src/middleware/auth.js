@@ -1,7 +1,6 @@
-// src/middleware/auth.js
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-
+ 
 export const protect = async (req, res, next) => {
   try {
     // Lấy token từ header Authorization: Bearer <token>
@@ -9,16 +8,16 @@ export const protect = async (req, res, next) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Không có quyền truy cập. Vui lòng đăng nhập.' });
     }
-
+ 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+ 
     // Tìm user từ token
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
       return res.status(401).json({ message: 'Token không hợp lệ.' });
     }
-
+ 
     req.user = user;
     next();
   } catch (error) {
@@ -31,7 +30,7 @@ export const protect = async (req, res, next) => {
     res.status(500).json({ message: 'Lỗi server.' });
   }
 };
-
+ 
 // Middleware kiểm tra quyền admin
 export const adminOnly = (req, res, next) => {
   if (req.user?.role !== 'admin') {

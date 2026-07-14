@@ -1,4 +1,3 @@
-// src/hooks/useAuth.js
 import { useState, useEffect } from 'react';
 import {
   onAuthStateChanged,
@@ -10,12 +9,12 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../firebase';
-
+ 
 export function useAuth() {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-
+ 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -23,9 +22,9 @@ export function useAuth() {
     });
     return unsubscribe;
   }, []);
-
+ 
   const clearError = () => setError(null);
-
+ 
   // ── Đăng ký Email/Password ──
   const register = async ({ fullName, email, password }) => {
     try {
@@ -40,7 +39,7 @@ export function useAuth() {
       return { success: false };
     }
   };
-
+ 
   // ── Đăng nhập Email/Password ──
   const login = async ({ email, password }) => {
     try {
@@ -53,7 +52,7 @@ export function useAuth() {
       return { success: false };
     }
   };
-
+ 
   // ── Đăng nhập Google ──
   const loginWithGoogle = async () => {
     try {
@@ -67,7 +66,7 @@ export function useAuth() {
       return { success: false };
     }
   };
-
+ 
   // ── Đăng nhập Facebook ──
   const loginWithFacebook = async () => {
     try {
@@ -81,16 +80,16 @@ export function useAuth() {
       return { success: false };
     }
   };
-
+ 
   // ── Đăng xuất ──
   const logout = () => signOut(auth);
-
+ 
   return {
     user, loading, error, clearError,
     register, login, loginWithGoogle, loginWithFacebook, logout,
   };
 }
-
+ 
 // Map Firebase error codes → tiếng Việt
 const FIREBASE_ERRORS = {
   'auth/email-already-in-use':   'Email này đã được đăng ký.',
