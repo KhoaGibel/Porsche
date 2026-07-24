@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Navigate, Link } from 'react-router-dom';
 import { Can, useAbility } from '../../hooks/useAbility';
 import useCarStore from '../../store/useCarStore';
+import { adminAPI } from '../../services/api';
 import './AdminDashboard.css';
- 
+
 // ── Menu items — mỗi item có CASL check riêng ──
 const MENU_ITEMS = [
   { id: 'overview',   label: 'Tổng quan',       icon: '📊', action: 'read',   subject: 'Dashboard' },
@@ -14,250 +15,336 @@ const MENU_ITEMS = [
   { id: 'shop',       label: 'Gói subscription', icon: '🛒', action: 'manage', subject: 'Shop'      },
   { id: 'roles',      label: 'Phân quyền',       icon: '🔐', action: 'manage', subject: 'all'       },
 ];
- 
-// ── Fake stats ──
-const STATS = [
-  { label: 'Tổng người dùng', value: '1,284',   delta: '+12%', icon: '👥', color: '#3b82f6' },
-  { label: 'Đơn tháng này',   value: '₫842M',   delta: '+8%',  icon: '💳', color: '#22c55e' },
-  { label: 'Lịch lái thử',    value: '47',       delta: '+23%', icon: '🚗', color: '#f59e0b' },
-  { label: 'Gói Elite',       value: '23 users', delta: '+5%',  icon: '⭐', color: '#d4af37' },
-];
- 
-const RECENT_ORDERS = [
-  { id: 'ORD-001', user: 'Nguyễn Văn A', plan: 'Elite',   amount: '50.000.000₫', status: 'confirmed', date: '07/07/2026' },
-  { id: 'ORD-002', user: 'Trần Thị B',   plan: 'Premium', amount: '25.000.000₫', status: 'pending',   date: '06/07/2026' },
-  { id: 'ORD-003', user: 'Lê Văn C',     plan: 'Basic',   amount: '10.000.000₫', status: 'confirmed', date: '06/07/2026' },
-  { id: 'ORD-004', user: 'Phạm Thị D',   plan: 'Elite',   amount: '50.000.000₫', status: 'cancelled', date: '05/07/2026' },
-  { id: 'ORD-005', user: 'Hoàng Văn E',  plan: 'Premium', amount: '25.000.000₫', status: 'confirmed', date: '05/07/2026' },
-];
- 
-const RECENT_TESTDRIVES = [
-  { user: 'Nguyễn Văn A', car: 'GT3 RS', date: '10/07/2026 09:00', location: 'Hà Nội', status: 'confirmed' },
-  { user: 'Trần Thị B',   car: '911 Turbo S', date: '11/07/2026 14:30', location: 'HCM', status: 'pending'   },
-  { user: 'Lê Văn C',     car: 'GT3',    date: '12/07/2026 10:00', location: 'Đà Nẵng', status: 'confirmed' },
-];
- 
-const ROLE_COLORS = { confirmed: '#22c55e', pending: '#f59e0b', cancelled: '#ef4444' };
+
+const ROLE_COLORS = { confirmed: '#059669', pending: '#d97706', cancelled: '#dc2626' }; // Đã tinh chỉnh màu cho sáng sủa hơn
 const ROLE_LABELS = { confirmed: 'Đã xác nhận', pending: 'Chờ duyệt', cancelled: 'Đã hủy' };
- 
+
 export default function AdminDashboard() {
   const ability   = useAbility();
   const user      = useCarStore((s) => s.user ?? null);
   const [activeMenu, setActiveMenu] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
- 
-  // Redirect nếu không có quyền
-  if (!ability.can('read', 'Dashboard')) {
-    return <Navigate to="/" replace />;
-  }
- 
+  
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [testDrives, setTestDrives] = useState([]);
+
   const visibleMenu = MENU_ITEMS.filter(item =>
     ability.can(item.action, item.subject)
   );
- 
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (activeMenu === 'overview' && ability.can('read', 'Dashboard')) {
+        const res = await adminAPI.getDashboardStats();
+        setStats(res.data || []); 
+      } 
+      else if (activeMenu === 'users' && ability.can('read', 'User')) {
+        const res = await adminAPI.getAllUsers();
+        setUsers(res.data || []);
+      } 
+      else if (activeMenu === 'orders' && ability.can('read', 'Order')) {
+        const res = await adminAPI.getAllOrders();
+        setOrders(res.data || []);
+      } 
+      else if (activeMenu === 'testdrives' && ability.can('manage', 'TestDrive')) {
+        const res = await adminAPI.getAllTestDrives();
+        setTestDrives(res.data || res);
+      }
+    } catch (error) {
+      console.error(`Lỗi tải dữ liệu cho tab ${activeMenu}:`, error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeMenu, ability]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (!ability.can('read', 'Dashboard')) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleUpdateStatus = async (id, newStatus) => {
+    if(!window.confirm(`Xác nhận chuyển trạng thái thành: ${ROLE_LABELS[newStatus]}?`)) return;
+    try {
+      await adminAPI.updateTestDriveStatus(id, newStatus);
+      fetchData();
+    } catch (error) {
+      alert('Có lỗi xảy ra khi cập nhật trạng thái!');
+    }
+  };
+
   return (
     <div className="admin-layout">
- 
       {/* ── Sidebar ── */}
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
+      <aside className={`admin-sidebar ${!sidebarOpen ? 'collapsed' : ''}`}>
         <div className="admin-sidebar-header">
-          <span className="admin-logo">PORSCHE</span>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <div className="porsche-text-logo">
+            PORSCHE
+          </div>
+</Link>
           <button className="admin-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? '◀' : '▶'}
           </button>
         </div>
- 
-        {/* User info */}
-        <div className="admin-user-info">
-          <div className="admin-avatar">
-            {user?.fullName?.[0]?.toUpperCase() ?? 'A'}
-          </div>
-          {sidebarOpen && (
-            <div>
-              <p className="admin-user-name">{user?.fullName ?? 'Admin'}</p>
-              <p className="admin-user-role">{user?.role ?? 'admin'}</p>
+        
+        {sidebarOpen && (
+          <div className="admin-user-info">
+            <div className="admin-avatar">
+              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'A'}
             </div>
-          )}
-        </div>
- 
-        {/* Menu */}
+            <div style={{ overflow: 'hidden' }}>
+              <div className="admin-user-name">{user?.displayName || 'ADMIN'}</div>
+              <div className="admin-user-role">{user?.role || 'Super Admin'}</div>
+            </div>
+          </div>
+        )}
+
         <nav className="admin-nav">
-          {visibleMenu.map((item) => (
+          {visibleMenu.map(item => (
             <button
               key={item.id}
-              className={`admin-nav-item ${activeMenu === item.id ? 'active' : ''}`}
               onClick={() => setActiveMenu(item.id)}
-              title={!sidebarOpen ? item.label : undefined}
+              className={`admin-nav-item ${activeMenu === item.id ? 'active' : ''}`}
             >
               <span className="admin-nav-icon">{item.icon}</span>
               {sidebarOpen && <span className="admin-nav-label">{item.label}</span>}
-              {/* CASL badge — hiện role cần để truy cập */}
-              {sidebarOpen && item.subject !== 'Dashboard' && (
-                <span className="admin-nav-badge">
-                  {item.action === 'manage' ? 'manage' : 'read'}
-                </span>
-              )}
             </button>
           ))}
         </nav>
- 
-        {/* CASL info */}
-        {sidebarOpen && (
-          <div className="admin-casl-info">
-            <p className="admin-casl-title">🔐 CASL Permissions</p>
-            <p className="admin-casl-role">Role: <strong>{user?.role ?? 'admin'}</strong></p>
-            <p className="admin-casl-desc">
-              Menu được lọc tự động theo quyền của role hiện tại.
-            </p>
-          </div>
-        )}
       </aside>
- 
+
       {/* ── Main content ── */}
       <main className="admin-main">
- 
-        {/* Topbar */}
         <header className="admin-topbar">
           <div>
             <h1 className="admin-page-title">
-              {visibleMenu.find(m => m.id === activeMenu)?.icon}{' '}
-              {visibleMenu.find(m => m.id === activeMenu)?.label ?? 'Dashboard'}
+              {MENU_ITEMS.find(m => m.id === activeMenu)?.label || 'Dashboard'}
             </h1>
-            <p className="admin-breadcrumb">Admin / {visibleMenu.find(m => m.id === activeMenu)?.label}</p>
+            <div className="admin-breadcrumb">Admin / {MENU_ITEMS.find(m => m.id === activeMenu)?.label}</div>
           </div>
-          <div className="admin-topbar-actions">
-            <span className="admin-date">07/07/2026</span>
-          </div>
+          <div className="admin-date">{new Date().toLocaleDateString('vi-VN')}</div>
         </header>
- 
-        {/* ── Overview ── */}
+
+        {/* ── 1. GIAO DIỆN TAB TỔNG QUAN ── */}
         {activeMenu === 'overview' && (
           <div className="admin-content">
-            {/* Stats */}
-            <div className="admin-stats">
-              {STATS.map((stat, i) => (
-                <div key={i} className="admin-stat-card">
-                  <div className="admin-stat-icon" style={{ background: stat.color + '20', color: stat.color }}>
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <p className="admin-stat-label">{stat.label}</p>
-                    <p className="admin-stat-value">{stat.value}</p>
-                    <p className="admin-stat-delta" style={{ color: stat.color }}>{stat.delta} so với tháng trước</p>
-                  </div>
+            <div className="admin-section">
+              <div className="admin-section-header">
+                <div>
+                  <h2 className="admin-section-title">Tổng quan hệ thống</h2>
+                  <p className="admin-section-desc">Theo dõi các chỉ số quan trọng.</p>
                 </div>
-              ))}
+                <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+              </div>
+              
+              {loading ? (
+                <div className="admin-empty-state">Đang tải dữ liệu tổng quan...</div>
+              ) : stats.length === 0 ? (
+                <div className="admin-empty-state">Chưa có dữ liệu thống kê từ Server.</div>
+              ) : (
+                <div className="admin-stats">
+                  {stats.map((stat, idx) => (
+                    <div key={idx} className="admin-stat-card">
+                      <div className="admin-stat-icon" style={{ color: stat.color, background: stat.bg }}>
+                        {stat.icon}
+                      </div>
+                      <div>
+                        <div className="admin-stat-label">{stat.label}</div>
+                        <div className="admin-stat-value">{stat.value}</div>
+                        <div className="admin-stat-delta" style={{ color: '#059669' }}>{stat.delta} so với kỳ trước</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
- 
-            {/* Recent orders */}
-            <Can do="read" on="Order">
+          </div>
+        )}
+
+        {/* ── 2. QUẢN LÝ NGƯỜI DÙNG ── */}
+        {activeMenu === 'users' && (
+          <Can do="read" on="User">
+            <div className="admin-content">
               <div className="admin-section">
-                <h2 className="admin-section-title">Đơn hàng gần đây</h2>
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Quản lý Tài Khoản</h2>
+                    <p className="admin-section-desc">Danh sách toàn bộ khách hàng và nhân viên.</p>
+                  </div>
+                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                </div>
+
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>Mã đơn</th><th>Khách hàng</th><th>Gói</th>
-                        <th>Số tiền</th><th>Ngày</th><th>Trạng thái</th>
+                        <th>Tên hiển thị</th>
+                        <th>Email</th>
+                        <th>Quyền (Role)</th>
+                        <th>Đăng nhập qua</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {RECENT_ORDERS.map((o) => (
-                        <tr key={o.id}>
-                          <td className="admin-td-mono">{o.id}</td>
-                          <td>{o.user}</td>
-                          <td><span className="admin-badge-plan">{o.plan}</span></td>
-                          <td className="admin-td-amount">{o.amount}</td>
-                          <td>{o.date}</td>
-                          <td>
-                            <span className="admin-status" style={{ color: ROLE_COLORS[o.status], background: ROLE_COLORS[o.status] + '20' }}>
-                              {ROLE_LABELS[o.status]}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {loading ? (
+                        <tr><td colSpan="6" className="admin-empty-state">Đang tải dữ liệu Users...</td></tr>
+                      ) : users.length === 0 ? (
+                        <tr><td colSpan="6" className="admin-empty-state">Chưa có tài khoản nào.</td></tr>
+                      ) : (
+                        users.map((u) => (
+                          <tr key={u._id}>
+                            <td><strong>{u.fullName || u.displayName}</strong></td>
+                            <td className="admin-td-mono">{u.email}</td>
+                            <td>
+                              <span className={`admin-badge-car ${u.role === 'admin' ? 'admin-role-admin' : ''}`}>
+                                {u.role?.toUpperCase() || 'USER'}
+                              </span>
+                            </td>
+                            <td>{u.provider}</td>
+                            <td className="admin-td-mono">{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
+                            <td>
+                              <button className="btn-text-primary">Sửa</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            </Can>
- 
-            {/* Recent test drives */}
-            <Can do="manage" on="TestDrive">
-              <div className="admin-section">
-                <h2 className="admin-section-title">Lịch lái thử sắp tới</h2>
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
-                    <thead>
-                      <tr><th>Khách hàng</th><th>Xe</th><th>Thời gian</th><th>Showroom</th><th>Trạng thái</th></tr>
-                    </thead>
-                    <tbody>
-                      {RECENT_TESTDRIVES.map((t, i) => (
-                        <tr key={i}>
-                          <td>{t.user}</td>
-                          <td><span className="admin-badge-car">{t.car}</span></td>
-                          <td className="admin-td-mono">{t.date}</td>
-                          <td>{t.location}</td>
-                          <td>
-                            <span className="admin-status" style={{ color: ROLE_COLORS[t.status], background: ROLE_COLORS[t.status] + '20' }}>
-                              {ROLE_LABELS[t.status]}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </Can>
-          </div>
-        )}
- 
-        {/* ── Roles page ── */}
-        {activeMenu === 'roles' && (
-          <Can do="manage" on="all">
-            <div className="admin-content">
-              <div className="admin-section">
-                <h2 className="admin-section-title">Phân quyền hệ thống — CASL</h2>
-                <p className="admin-section-desc">
-                  Hệ thống phân quyền dùng thư viện <strong>CASL.js</strong> — định nghĩa trong{' '}
-                  <code>src/abilities/ability.js</code>
-                </p>
-                <div className="admin-roles-grid">
-                  {[
-                    { role: 'user',    color: '#3b82f6', perms: ['read Car', 'configure Car', 'read Shop', 'purchase Shop', 'book TestDrive'] },
-                    { role: 'dealer',  color: '#f59e0b', perms: ['manage Car', 'manage TestDrive', 'read User', 'read Order', 'read Dashboard'] },
-                    { role: 'manager', color: '#8b5cf6', perms: ['manage Car', 'manage TestDrive', 'manage Order', 'update User', 'manage Shop', 'manage Dashboard'] },
-                    { role: 'admin',   color: '#dc2626', perms: ['manage all — toàn quyền không giới hạn'] },
-                  ].map((r) => (
-                    <div key={r.role} className="admin-role-card" style={{ borderColor: r.color + '40' }}>
-                      <div className="admin-role-header" style={{ background: r.color + '15' }}>
-                        <span className="admin-role-badge" style={{ background: r.color }}>{r.role}</span>
-                      </div>
-                      <ul className="admin-role-perms">
-                        {r.perms.map((p, i) => (
-                          <li key={i}><code>{p}</code></li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
           </Can>
         )}
- 
-        {/* Placeholder cho các menu khác */}
-        {!['overview', 'roles'].includes(activeMenu) && (
-          <div className="admin-content admin-placeholder">
-            <div className="admin-placeholder-inner">
-              <span style={{ fontSize: 48 }}>
-                {visibleMenu.find(m => m.id === activeMenu)?.icon}
-              </span>
-              <h2>{visibleMenu.find(m => m.id === activeMenu)?.label}</h2>
-              <p>Tính năng đang phát triển — sẽ tích hợp với MongoDB backend.</p>
+
+        {/* ── 3. QUẢN LÝ ĐƠN HÀNG/THANH TOÁN ── */}
+        {activeMenu === 'orders' && (
+          <Can do="read" on="Order">
+            <div className="admin-content">
+              <div className="admin-section">
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Quản lý Thanh toán</h2>
+                    <p className="admin-section-desc">Giao dịch mua xe, cọc xe và nâng cấp gói.</p>
+                  </div>
+                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Mã đơn (ID)</th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm/Gói</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày thanh toán</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr><td colSpan="6" className="admin-empty-state">Đang tải dữ liệu Thanh toán...</td></tr>
+                      ) : orders.length === 0 ? (
+                        <tr><td colSpan="6" className="admin-empty-state">Chưa có giao dịch nào.</td></tr>
+                      ) : (
+                        orders.map((o) => (
+                          <tr key={o.id}>
+                            <td className="admin-td-mono">{o.orderId}</td>
+                            <td><strong>{o.customerName}</strong></td>
+                            <td><span className="admin-badge-plan">{o.productName}</span></td>
+                            <td className="admin-td-amount">{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
+                            <td>
+                              <span className="admin-status" style={{ color: ROLE_COLORS[o.status], background: ROLE_COLORS[o.status] + '20' }}>
+                                {ROLE_LABELS[o.status] || o.status}
+                              </span>
+                            </td>
+                            <td className="admin-td-mono">{new Date(o.paymentDate).toLocaleString('vi-VN')}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
+          </Can>
+        )}
+
+        {/* ── 4. LỊCH LÁI THỬ ── */}
+        {activeMenu === 'testdrives' && (
+          <Can do="manage" on="TestDrive">
+            <div className="admin-content">
+              <div className="admin-section">
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Quản lý lịch lái thử</h2>
+                    <p className="admin-section-desc">Xác nhận và sắp xếp lịch trải nghiệm xe cho khách hàng.</p>
+                  </div>
+                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Xe / Gói</th>
+                        <th>Thời gian</th>
+                        <th>Showroom</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr><td colSpan="7" className="admin-empty-state">Đang tải dữ liệu...</td></tr>
+                      ) : testDrives.length === 0 ? (
+                        <tr><td colSpan="7" className="admin-empty-state">Chưa có dữ liệu lịch lái thử.</td></tr>
+                      ) : (
+                        testDrives.map((t) => (
+                          <tr key={t._id}>
+                            <td className="admin-td-mono">{t.orderNumber}</td>
+                            <td>
+                              <strong>{t.userName || t.user}</strong><br/>
+                              <span style={{ fontSize: '11px', color: '#6b7280' }}>{t.phone}</span>
+                            </td>
+                            <td>
+                              <span className="admin-badge-car">{t.cars?.join(', ') || t.car}</span><br/>
+                              <span style={{ fontSize: '11px', color: '#6b7280' }}>{t.planName}</span>
+                            </td>
+                            <td className="admin-td-mono">{new Date(t.scheduledAt).toLocaleString('vi-VN')}</td>
+                            <td>{t.showroom}</td>
+                            <td>
+                              <span className="admin-status" style={{ color: ROLE_COLORS[t.status], background: ROLE_COLORS[t.status] + '20' }}>
+                                {ROLE_LABELS[t.status] || t.status}
+                              </span>
+                            </td>
+                            <td>
+                              {t.status === 'pending' && (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button onClick={() => handleUpdateStatus(t._id, 'confirmed')} className="btn-outline-success">Duyệt</button>
+                                  <button onClick={() => handleUpdateStatus(t._id, 'cancelled')} className="btn-outline-danger">Hủy</button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Can>
         )}
       </main>
     </div>

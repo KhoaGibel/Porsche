@@ -1,36 +1,48 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect, createContext } from 'react';
-import { 
-  AbilityProvider as CaslAbilityProvider, 
-  Can as CaslCan, 
-  useAbility as useCaslAbility 
-} from '@casl/react';
-import { ability, updateAbility } from '../abilities/ability';
+import { createContext, useContext, useEffect } from 'react';
+import { ability, updateAbility } from '../config/ability';
+import useCarStore from '../store/useCarStore';
 
-// Vẫn giữ lại export này đề phòng có file cũ nào đó đang import
+// 1. Tự tạo Context bằng React thuần (Luôn có sẵn ability gốc, không bao giờ undefined)
 export const AbilityContext = createContext(ability);
 
-export function AbilityProvider({ user, children }) {
-  useEffect(() => { 
-    updateAbility(user); 
+// 2. Custom Provider
+export function AbilityProvider({ children }) {
+  const user = useCarStore((s) => s.user ?? null);
+
+  useEffect(() => {
+    if (updateAbility) {
+      updateAbility(user);
+    }
   }, [user]);
 
   return (
-    // Dùng trực tiếp Provider có sẵn của CASL v7
-    <CaslAbilityProvider ability={ability}>
+    <AbilityContext.Provider value={ability}>
       {children}
-    </CaslAbilityProvider>
+    </AbilityContext.Provider>
   );
 }
 
-// Bọc lại hook của CASL (ở v7 không cần truyền Context vào nữa)
+// 3. Custom Hook (Sử dụng useContext NGUYÊN BẢN CỦA REACT)
 export function useAbility() {
-  return useCaslAbility();
+  const context = useContext(AbilityContext);
+  // Nếu có lỗi ngầm lag import, luôn có phao cứu sinh là ability gốc
+  return context || ability; 
 }
 
-// Dùng trực tiếp thẻ Can gốc của thư viện
-export const Can = CaslCan;
+// 4. Tự code thẻ <Can> siêu cấp nhẹ và không bao giờ crash
+export function Can({ do: action, on: subject, children }) {
+  const currentAbility = useAbility();
 
+  // Kiểm tra quyền, nếu thoả mãn thì render UI, không thì ẩn đi
+  if (currentAbility && currentAbility.can(action, subject)) {
+    return children;
+  }
+  
+  return null;
+}
+
+// 5. Hàm check quyền dùng cho logic JS
 export function usePermission(action, subject) {
   return useAbility().can(action, subject);
 }

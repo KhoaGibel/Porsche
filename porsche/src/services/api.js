@@ -63,39 +63,46 @@ export const userAPI = {
   bookTestDrive: (body) =>
     authFetch('/users/test-drives', { method: 'POST', body: JSON.stringify(body) }),
 
-  // Lấy danh sách lịch lái thử (Hàng thật kết nối MongoDB của Khoa)
+  // Lấy danh sách lịch lái thử
   getTestDrives: () => authFetch('/users/test-drives'),
 };
 
 // ─────────────────────────────────────────────
-// SUBSCRIPTION (Gói đăng ký dịch vụ bổ sung)
+// ADMIN (Kết nối MongoDB & MySQL)
 // ─────────────────────────────────────────────
-export const subAPI = {
-  getMySub: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          subscription: {
-            plan: 'premium',
-            status: 'active',
-            startDate: new Date().toISOString(),
-            endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-            renewsAt: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
-          }
-        });
-      }, 500);
-    });
-  },
-  cancel: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 500);
-    });
-  }
+export const adminAPI = {
+  // 🚀 Lấy số liệu tổng quan hệ thống
+  getDashboardStats: () => authFetch('/admin/stats'),
+
+  // 🚀 Lấy danh sách Người dùng (từ MongoDB)
+  getAllUsers: () => authFetch('/admin/users'),
+
+  // 🚀 Lấy danh sách Đơn hàng / Thanh toán (từ MySQL)
+  getAllOrders: () => authFetch('/admin/orders'),
+
+  // Lấy toàn bộ danh sách lịch lái thử của tất cả khách hàng
+  getAllTestDrives: () => authFetch('/admin/test-drives'),
+
+  // Cập nhật trạng thái đơn lái thử (Duyệt/Hủy)
+  updateTestDriveStatus: (id, status) =>
+    authFetch(`/admin/test-drives/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 // ─────────────────────────────────────────────
-// Token helpers — gọi sau khi login thành công
+// SUBSCRIPTION / PAYMENT (Đã xóa dữ liệu ảo)
 // ─────────────────────────────────────────────
+export const subAPI = {
+  // 🚀 Gọi xuống Backend lấy thông tin gói Subscription thật
+  getMySub: () => authFetch('/subscriptions/me'),
+
+  // 🚀 Gửi request Hủy gói Subscription
+  cancel: () => authFetch('/subscriptions/cancel', { method: 'POST' })
+};
+
+// Helpers quản lý Token
 export const saveToken  = (token) => localStorage.setItem('porsche_token', token);
 export const clearToken = ()      => localStorage.removeItem('porsche_token');
 export const hasToken   = ()      => !!getToken();

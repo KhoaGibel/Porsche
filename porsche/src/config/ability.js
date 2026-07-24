@@ -56,7 +56,8 @@ export function defineAbilityFor(user) {
 }
  
 export const ability = createMongoAbility([]);
- 
+export default ability;
+
 export function updateAbility(user) {
   const newAbility = defineAbilityFor(user);
   ability.update(newAbility.rules);

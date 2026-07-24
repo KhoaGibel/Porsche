@@ -9,23 +9,69 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../firebase';
- 
+import { authAPI, saveToken, clearToken } from '../services/api';
+import useCarStore from '../store/useCarStore';
+
 export function useAuth() {
-  const [user, setUser]       = useState(null);
+  const [user, setUser]       = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
- 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+
+useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+
+      if (firebaseUser) {
+        
+        // 1. ĐẶC QUYỀN CHO SUPER ADMIN: BỎ QUA BACKEND!
+        if (firebaseUser.email === 'admin@porsche.local') {
+          useCarStore.getState().setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            fullName: firebaseUser.displayName || 'Super Admin',
+            avatar: firebaseUser.photoURL,
+            role: 'admin' 
+          });
+          setLoading(false);
+          return;
+        }
+
+
+        //2. LUỒNG BÌNH THƯỜNG CHO KHÁCH HÀNG / QUẢN LÝ
+        try {
+          const providerId = firebaseUser.providerData[0]?.providerId ?? 'password';
+          const provider =
+            providerId.includes('google')   ? 'google'
+            : providerId.includes('facebook') ? 'facebook'
+            : 'local';
+
+          const res = await authAPI.firebaseSync({
+            firebaseUid: firebaseUser.uid,
+            email:       firebaseUser.email,
+            fullName:    firebaseUser.displayName,
+            avatar:      firebaseUser.photoURL,
+            provider,
+          });
+
+          // Lưu token và lấy Role do Backend quyết định (user, manager, dealer...)
+          saveToken(res.token);
+          useCarStore.getState().setUser(res.user);
+        } catch (err) {
+          console.error('Đồng bộ tài khoản với server thất bại:', err);
+        }
+      } else {
+        clearToken();
+        useCarStore.getState().setUser(null);
+      }
+
       setLoading(false);
     });
+
     return unsubscribe;
   }, []);
- 
+
   const clearError = () => setError(null);
- 
-  // ── Đăng ký Email/Password ──
+
   const register = async ({ fullName, email, password }) => {
     try {
       setError(null);
@@ -39,8 +85,7 @@ export function useAuth() {
       return { success: false };
     }
   };
- 
-  // ── Đăng nhập Email/Password ──
+
   const login = async ({ email, password }) => {
     try {
       setError(null);
@@ -52,8 +97,7 @@ export function useAuth() {
       return { success: false };
     }
   };
- 
-  // ── Đăng nhập Google ──
+
   const loginWithGoogle = async () => {
     try {
       setError(null);
@@ -66,8 +110,7 @@ export function useAuth() {
       return { success: false };
     }
   };
- 
-  // ── Đăng nhập Facebook ──
+
   const loginWithFacebook = async () => {
     try {
       setError(null);
@@ -80,17 +123,15 @@ export function useAuth() {
       return { success: false };
     }
   };
- 
-  // ── Đăng xuất ──
+
   const logout = () => signOut(auth);
- 
+
   return {
     user, loading, error, clearError,
     register, login, loginWithGoogle, loginWithFacebook, logout,
   };
 }
- 
-// Map Firebase error codes → tiếng Việt
+
 const FIREBASE_ERRORS = {
   'auth/email-already-in-use':   'Email này đã được đăng ký.',
   'auth/invalid-email':          'Địa chỉ email không hợp lệ.',

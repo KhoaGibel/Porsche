@@ -4,5 +4,9 @@ body {
   background-color: #060606; 
   color: rgb(255, 255, 255);
   margin: 0;
-  overflow: hidden; 
+  overflow: clip; 
+}
+html {
+  scroll-padding-top: 80px; 
+  scroll-behavior: auto;
 }

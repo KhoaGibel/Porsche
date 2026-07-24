@@ -3,8 +3,9 @@ import './Navbar.css';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { Can } from "../../hooks/useAbility";
 
-function Navbar() {
+function Navbar({ selectedCar, setSelectedCar }) {
     const isMobile = useIsMobile();
     const navigate = useNavigate();
 
@@ -17,6 +18,9 @@ function Navbar() {
     const menuDropdownRef = useRef(null);
 
     const { user, logout } = useAuth();
+
+    // Danh sách các dòng xe
+    const CAR_MODELS = ['GT3 RS', 'GT3', '911 TURBO S'];
 
     // Tự động đóng Menu khi click ra ngoài
     useEffect(() => {
@@ -44,7 +48,6 @@ function Navbar() {
         }
     };
 
-    // Hàm Dịch chuyển mượt mà xuống các khu vực
     const scrollToSection = (sectionId) => {
         const el = document.getElementById(sectionId);
         if (el) {
@@ -54,22 +57,37 @@ function Navbar() {
         setIsMobileMenuOpen(false);
     };
 
+    const handleCarSelect = (car) => {
+        setSelectedCar(car);
+        setIsMobileMenuOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     return (
-        <div className="navbar">
-            {/* Logo */}
+        <div className="navbar fixed top-0 left-0 w-full z-50 box-border">
             <div 
                 className="porsche-text-logo" 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} 
             >
                 PORSCHE
             </div>
 
-            {/* ── BÊN TRÁI: GIỮ NGUYÊN 3 DÒNG XE GỐC ── */}
+            {/* ── BÊN TRÁI: DANH SÁCH DÒNG XE ── */}
             {!isMobile && (
-                <ul>
-                    <li>GT3 RS</li>
-                    <li>GT3</li>
-                    <li>911 Turbo S</li>
+                <ul style={{ display: 'flex', gap: '35px', margin: 0, padding: 0 }}>
+                    {CAR_MODELS.map(car => (
+                        <li 
+                            key={car}
+                            onClick={() => handleCarSelect(car)}
+                            className={`cursor-pointer font-semibold tracking-wide transition-colors duration-300 ${
+                                selectedCar === car ? 'text-[#dc2626]' : 'text-white hover:text-[#dc2626]'
+                            }`}
+                        >
+                            {car}
+                        </li>
+                    ))}
                 </ul>
             )}
 
@@ -77,7 +95,11 @@ function Navbar() {
             {!isMobile ? (
                 <div style={{ display: 'flex', gap: '30px', alignItems: 'center', fontSize: "16px" }}>
                     <ul style={{ display: 'flex', gap: '30px', alignItems: 'center', margin: 0, padding: 0 }}>
-                        <li className="cursor-pointer transition-colors font-semibold tracking-wide hover:text-red-500">Shop</li>
+                        <li>
+                            <Link to="/shop" className="cursor-pointer transition-colors font-semibold tracking-wide hover:text-red-500">
+                                Shop
+                            </Link>
+                        </li>
                         
                         {/* ── Menu Account ── */}
                         {user ? (
@@ -90,16 +112,23 @@ function Navbar() {
                                     Account
                                 </div>
 
-                                {/* 🎯 Bảng Dropdown Account: KÍNH TRONG SUỐT (Glassmorphism) */}
+                                {/* 🎯 Bảng Dropdown Account */}
                                 {isAccountMenuOpen && (
-                                    <div className="absolute right-0 mt-5 w-56 bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
+                                    <div className="absolute right-0 mt-5 w-56 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
                                         <div className="px-4 py-3 border-b border-white/10 text-left">
                                             <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-bold">Hi,</p>
-                                            <p className="text-sm font-bold truncate">
-                                                {user.displayName || 'Khách hàng'}
+                                            <p className="text-sm font-bold truncate text-[#dc2626]">
+                                                {user.displayName || 'ADMIN'}
                                             </p>
                                         </div>
                                         <div className="py-1 text-left">
+                                            {/* 🚀 NÚT ADMIN ĐÃ ĐƯỢC CHUYỂN VÀO TRONG DROPDOWN */}
+                                            <Can I="read" a="Dashboard">
+                                                <Link to="/admin" onClick={() => setIsAccountMenuOpen(false)} className="block px-4 py-2 text-sm text-red-500 font-bold hover:bg-white/10 transition-colors">
+                                                    Dashboard
+                                                </Link>
+                                            </Can>
+
                                             <Link to="/profile" onClick={() => setIsAccountMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-white/10 hover:text-red-500 transition-colors">
                                                 Thông tin tài khoản
                                             </Link>
@@ -108,7 +137,7 @@ function Navbar() {
                                             </Link>
                                         </div>
                                         <div className="border-t border-white/10 mt-1 pt-1 text-left">
-                                            <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-bold text-red-500 hover:bg-white/10 transition-colors">
+                                            <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-bold text-gray-400 hover:text-red-500 hover:bg-white/10 transition-colors">
                                                 Đăng xuất
                                             </button>
                                         </div>
@@ -129,15 +158,15 @@ function Navbar() {
                                 Menu
                             </div>
 
-                            {/* 🎯 Bảng Dropdown Menu Khám phá: KÍNH TRONG SUỐT (Glassmorphism) */}
+                            {/* 🎯 Bảng Dropdown Menu Khám phá */}
                             {isMenuDropdownOpen && (
-                                <div className="absolute right-0 mt-5 w-64 bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
+                                <div className="absolute right-0 mt-5 w-64 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
                                     <div className="px-4 py-3 border-b border-white/10 text-left">
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Khám phá</p>
                                     </div>
                                     <div className="py-1 text-left">
                                         <button onClick={() => scrollToSection('hero-gt3rs')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-200 hover:bg-white/10 hover:text-red-500 transition-colors">
-                                            Porsche 911 GT3 RS
+                                            Porsche {selectedCar}
                                         </button>
                                         <button onClick={() => scrollToSection('history-section')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-200 hover:bg-white/10 hover:text-red-500 transition-colors">
                                             Lịch sử huyền thoại
@@ -155,7 +184,7 @@ function Navbar() {
                 <button
                     className="hamburger-btn"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    aria-label="Mở menu"
+                    aria-label="Mới menu"
                 >
                     <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
                     <span className={`hamburger-line ${isMobileMenuOpen ? 'open' : ''}`}></span>
@@ -167,20 +196,38 @@ function Navbar() {
             {isMobile && (
                 <div className={`mobile-menu-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
                     <ul className="mobile-menu-section">
-                        <li>GT3 RS</li>
-                        <li>GT3</li>
-                        <li>911 Turbo S</li>
+                        {CAR_MODELS.map(car => (
+                            <li 
+                                key={car} 
+                                onClick={() => handleCarSelect(car)}
+                                className={selectedCar === car ? 'text-[#dc2626]' : ''}
+                            >
+                                {car}
+                            </li>
+                        ))}
                     </ul>
                     <div className="mobile-menu-divider" />
                     <ul className="mobile-menu-section">
-                        <li>Shop</li>
+                        <li>
+                            <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Shop</Link>
+                        </li>
                         
                         {user ? (
                             <>
-                                <li className="text-gray-400 text-sm font-bold mt-2">Hi, {user.displayName || 'Khách hàng'}</li>
+                                <li className="text-gray-400 text-sm font-bold mt-2">Hi, <span className="text-[#dc2626]">{user.displayName || 'ADMIN'}</span></li>
+                                
+                                {/* 🚀 NÚT ADMIN CHO MOBILE */}
+                                <Can I="read" a="Dashboard">
+                                    <li>
+                                        <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="text-red-500 font-bold">
+                                            Trang Quản Trị
+                                        </Link>
+                                    </li>
+                                </Can>
+
                                 <li><Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>Thông tin tài khoản</Link></li>
                                 <li><Link to="/change-password" onClick={() => setIsMobileMenuOpen(false)}>Đổi mật khẩu</Link></li>
-                                <li onClick={handleLogout} className="text-red-500 font-bold">Đăng xuất</li>
+                                <li onClick={handleLogout} className="text-gray-400 hover:text-red-500">Đăng xuất</li>
                             </>
                         ) : (
                             <li><Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Account</Link></li>
@@ -190,7 +237,7 @@ function Navbar() {
                     <div className="mobile-menu-divider" />
                     <ul className="mobile-menu-section">
                         <li className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Menu Khám phá</li>
-                        <li onClick={() => scrollToSection('hero-gt3rs')} className="cursor-pointer hover:text-red-500">Porsche 911 GT3 RS</li>
+                        <li onClick={() => scrollToSection('hero-gt3rs')} className="cursor-pointer hover:text-red-500">Porsche {selectedCar}</li>
                         <li onClick={() => scrollToSection('history-section')} className="cursor-pointer hover:text-red-500">Lịch sử huyền thoại</li>
                         <li onClick={() => scrollToSection('3d-showroom')} className="cursor-pointer hover:text-red-500">Showroom 3D Cấu hình</li>
                     </ul>

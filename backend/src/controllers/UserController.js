@@ -81,10 +81,11 @@ export const deleteConfig = async (req, res) => {
 // ─────────────────────────────────────────────
 export const bookTestDrive = async (req, res) => {
   try {
-    const { carModel, colorHex, scheduledAt, location } = req.body;
+    // Cập nhật lại các trường nhận từ req.body cho khớp với TestDrive Schema
+    const { phone, showroom, scheduledAt, cars, planId, planName, note } = req.body;
 
-    if (!carModel || !scheduledAt) {
-      return res.status(400).json({ message: 'Vui lòng chọn xe và ngày lái thử.' });
+    if (!cars || !scheduledAt || !showroom) {
+      return res.status(400).json({ message: 'Vui lòng chọn xe, showroom và ngày lái thử.' });
     }
 
     const date = new Date(scheduledAt);
@@ -92,16 +93,30 @@ export const bookTestDrive = async (req, res) => {
       return res.status(400).json({ message: 'Ngày lái thử phải là ngày trong tương lai.' });
     }
 
-    const user = await User.findById(req.user._id);
-    user.testDrives.push({ carModel, colorHex, scheduledAt: date, location });
-    await user.save();
+    // Auto-generate orderNumber cho lịch lái thử
+    const orderNumber = 'TD-' + Math.random().toString(16).slice(2, 8).toUpperCase();
+
+    // Tạo document mới trong collection TestDrive
+    const newTestDrive = await TestDrive.create({
+      orderNumber,
+      user: req.user._id,
+      userName: req.user.fullName, // Lấy tên từ token đã verify
+      phone,
+      cars,
+      showroom,
+      scheduledAt: date,
+      planId,
+      planName,
+      note,
+      status: 'pending' // Mặc định trạng thái chờ duyệt
+    });
 
     res.status(201).json({
       message: 'Đặt lịch lái thử thành công! Chúng tôi sẽ liên hệ xác nhận.',
-      testDrives: user.testDrives,
+      testDrive: newTestDrive,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi server.' });
+    res.status(500).json({ message: 'Lỗi server.', error: error.message });
   }
 };
 
@@ -110,8 +125,11 @@ export const bookTestDrive = async (req, res) => {
 // ─────────────────────────────────────────────
 export const getTestDrives = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('testDrives');
-    res.json({ testDrives: user.testDrives });
+    // Query trực tiếp từ collection TestDrive thay vì chui vào User
+    const myTestDrives = await TestDrive.find({ user: req.user._id })
+                                        .sort({ createdAt: -1 });
+    
+    res.json({ testDrives: myTestDrives });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server.' });
   }

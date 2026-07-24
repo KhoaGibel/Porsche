@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { userAPI, saveToken } from '../../services/api';
 import useCarStore from '../../store/useCarStore';
-import './TestDriveModal.css';
 
 const SHOWROOMS = [
   'Showroom Hà Nội — 33 Láng Hạ',
@@ -69,154 +68,213 @@ export default function TestDriveModal({ onClose }) {
   };
 
   return (
-    <div className="td-overlay" onClick={onClose}>
-      <div className="td-modal" onClick={(e) => e.stopPropagation()}>
+    <>
+      <div 
+        className="fixed inset-0 z-[200] bg-white/80 backdrop-blur-[4px] flex items-center justify-center p-4 animate-td-fade-in" 
+        onClick={onClose}
+      >
+        <div 
+          className="relative w-full max-w-[480px] max-h-[90vh] overflow-y-auto bg-white text-[#111111] rounded-[16px] sm:rounded-[20px] px-[18px] py-[24px] sm:px-[32px] sm:py-[36px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] animate-td-slide-up custom-scrollbar" 
+          onClick={(e) => e.stopPropagation()}
+        >
 
-        {/* ── Nút đóng ── */}
-        <button className="td-close" onClick={onClose} aria-label="Đóng">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
+          {/* ── Nút đóng ── */}
+          <button 
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 border-none text-[#111] flex items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-gray-200" 
+            onClick={onClose} 
+            aria-label="Đóng"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
 
-        {step === 'form' ? (
-          <>
-            {/* ── Header ── */}
-            <div className="td-header">
-              <p className="td-eyebrow">Porsche Experience</p>
-              <h2 className="td-title">Đăng ký lái thử</h2>
-              {/* Pre-fill xe + màu đang xem */}
-              <div className="td-car-preview">
-                <div className="td-car-dot" style={{ background: carColor ?? '#fff' }} />
-                <span>{activeCar}</span>
-                {carColor && (
-                  <span className="td-color-name">— {carColor}</span>
-                )}
-              </div>
-            </div>
-
-            {/* ── Form ── */}
-            <form onSubmit={handleSubmit(onSubmit)} className="td-form" noValidate>
-
-              {/* Họ tên */}
-              <div className="td-field">
-                <label>Họ và tên</label>
-                <input
-                  type="text"
-                  placeholder="Nguyễn Văn A"
-                  {...register('fullName', {
-                    required: 'Vui lòng nhập họ tên',
-                    minLength: { value: 2, message: 'Tên phải có ít nhất 2 ký tự' },
-                  })}
-                  className={errors.fullName ? 'error' : ''}
-                />
-                {errors.fullName && <span className="td-error">{errors.fullName.message}</span>}
+          {step === 'form' ? (
+            <>
+              {/* ── Header ── */}
+              <div className="mb-6">
+                <p className="text-[11px] font-bold tracking-[0.3em] uppercase text-gray-500 mb-1.5">
+                  Porsche Experience
+                </p>
+                <h2 className="text-[24px] font-extrabold text-[#111] tracking-[0.02em] mb-2.5 uppercase">
+                  Đăng ký lái thử
+                </h2>
+                {/* Pre-fill xe + màu đang xem */}
+                <div className="flex items-center gap-2 py-2 px-3 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-semibold text-[#111] w-fit">
+                  <div className="w-3 h-3 rounded-full shrink-0 shadow-[0_0_0_1px_#d1d5db]" style={{ background: carColor ?? '#fff' }} />
+                  <span>{activeCar}</span>
+                  {carColor && (
+                    <span className="text-gray-600 text-xs font-medium">— {carColor}</span>
+                  )}
+                </div>
               </div>
 
-              {/* Số điện thoại */}
-              <div className="td-field">
-                <label>Số điện thoại</label>
-                <input
-                  type="tel"
-                  placeholder="0912 345 678"
-                  {...register('phone', {
-                    required: 'Vui lòng nhập số điện thoại',
-                    pattern: {
-                      value: /^[0-9]{9,11}$/,
-                      message: 'Số điện thoại không hợp lệ',
-                    },
-                  })}
-                  className={errors.phone ? 'error' : ''}
-                />
-                {errors.phone && <span className="td-error">{errors.phone.message}</span>}
-              </div>
+              {/* ── Form ── */}
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5" noValidate>
 
-              {/* Chọn ngày + giờ — cùng 1 hàng */}
-              <div className="td-row">
-                <div className="td-field">
-                  <label>Ngày lái thử</label>
+                {/* Họ tên */}
+                <div className="flex flex-col gap-[5px]">
+                  <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">Họ và tên</label>
                   <input
-                    type="date"
-                    min={minDate}
-                    max={maxDate}
-                    {...register('date', { required: 'Vui lòng chọn ngày' })}
-                    className={errors.date ? 'error' : ''}
+                    type="text"
+                    placeholder="Nguyễn Văn A"
+                    {...register('fullName', {
+                      required: 'Vui lòng nhập họ tên',
+                      minLength: { value: 2, message: 'Tên phải có ít nhất 2 ký tự' },
+                    })}
+                    className={`p-2.5 bg-white border rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full placeholder:text-gray-400 focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)] ${errors.fullName ? 'border-red-600 bg-red-50' : 'border-gray-300'}`}
                   />
-                  {errors.date && <span className="td-error">{errors.date.message}</span>}
+                  {errors.fullName && <span className="text-[11px] text-red-600 font-medium">{errors.fullName.message}</span>}
                 </div>
 
-                <div className="td-field">
-                  <label>Giờ</label>
-                  <select
-                    {...register('time', { required: 'Vui lòng chọn giờ' })}
-                    className={errors.time ? 'error' : ''}
+                {/* Số điện thoại */}
+                <div className="flex flex-col gap-[5px]">
+                  <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">Số điện thoại</label>
+                  <input
+                    type="tel"
+                    placeholder="0912 345 678"
+                    {...register('phone', {
+                      required: 'Vui lòng nhập số điện thoại',
+                      pattern: {
+                        value: /^[0-9]{9,11}$/,
+                        message: 'Số điện thoại không hợp lệ',
+                      },
+                    })}
+                    className={`p-2.5 bg-white border rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full placeholder:text-gray-400 focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)] ${errors.phone ? 'border-red-600 bg-red-50' : 'border-gray-300'}`}
+                  />
+                  {errors.phone && <span className="text-[11px] text-red-600 font-medium">{errors.phone.message}</span>}
+                </div>
+
+                {/* Chọn ngày + giờ — cùng 1 hàng */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-[5px]">
+                    <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">Ngày lái thử</label>
+                    <input
+                      type="date"
+                      min={minDate}
+                      max={maxDate}
+                      {...register('date', { required: 'Vui lòng chọn ngày' })}
+                      className={`custom-calendar-icon p-2.5 bg-white border rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)] ${errors.date ? 'border-red-600 bg-red-50' : 'border-gray-300'}`}
+                    />
+                    {errors.date && <span className="text-[11px] text-red-600 font-medium">{errors.date.message}</span>}
+                  </div>
+
+                  <div className="flex flex-col gap-[5px]">
+                    <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">Giờ</label>
+                    <select
+                      {...register('time', { required: 'Vui lòng chọn giờ' })}
+                      className={`p-2.5 bg-white border rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)] ${errors.time ? 'border-red-600 bg-red-50' : 'border-gray-300'}`}
+                    >
+                      <option value="">-- Chọn giờ --</option>
+                      {TIME_SLOTS.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    {errors.time && <span className="text-[11px] text-red-600 font-medium">{errors.time.message}</span>}
+                  </div>
+                </div>
+
+                {/* Showroom */}
+                <div className="flex flex-col gap-[5px]">
+                  <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">Showroom</label>
+                  <select 
+                    {...register('showroom')}
+                    className="p-2.5 bg-white border border-gray-300 rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)]"
                   >
-                    <option value="">-- Chọn giờ --</option>
-                    {TIME_SLOTS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                    {SHOWROOMS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-                  {errors.time && <span className="td-error">{errors.time.message}</span>}
                 </div>
-              </div>
 
-              {/* Showroom */}
-              <div className="td-field">
-                <label>Showroom</label>
-                <select {...register('showroom')}>
-                  {SHOWROOMS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
+                {/* Ghi chú */}
+                <div className="flex flex-col gap-[5px]">
+                  <label className="text-[11px] font-bold text-gray-700 tracking-[0.1em] uppercase">
+                    Ghi chú <span className="font-normal text-gray-400 normal-case tracking-normal">(tùy chọn)</span>
+                  </label>
+                  <textarea
+                    placeholder="Yêu cầu đặc biệt, câu hỏi..."
+                    rows={2}
+                    {...register('note')}
+                    className="p-2.5 bg-white border border-gray-300 rounded-lg text-[#111] text-[13px] outline-none transition-all duration-200 w-full placeholder:text-gray-400 focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.1)]"
+                  />
+                </div>
 
-              {/* Ghi chú */}
-              <div className="td-field">
-                <label>Ghi chú <span className="td-optional">(tùy chọn)</span></label>
-                <textarea
-                  placeholder="Yêu cầu đặc biệt, câu hỏi..."
-                  rows={2}
-                  {...register('note')}
-                />
-              </div>
+                {/* Lưu ý đăng nhập */}
+                <p className="text-[12px] color-gray-500 leading-relaxed text-gray-500">
+                  Đăng nhập để lưu lịch sử và nhận nhắc nhở qua email.{' '}
+                  <a href="/login" target="_blank" rel="noopener noreferrer" className="text-red-600 font-bold hover:underline">
+                    Đăng nhập / Đăng ký
+                  </a>
+                </p>
 
-              {/* Lưu ý đăng nhập */}
-              <p className="td-login-note">
-                Đăng nhập để lưu lịch sử và nhận nhắc nhở qua email.{' '}
-                <a href="/login" target="_blank" rel="noopener noreferrer">
-                  Đăng nhập / Đăng ký
-                </a>
+                {/* Error từ API */}
+                {apiError && <div className="py-2.5 px-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 text-center font-medium">{apiError}</div>}
+
+                {/* Submit */}
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="mt-1 w-full p-[14px] bg-red-600 text-white text-[13px] font-bold tracking-[0.1em] uppercase border-none rounded-[10px] cursor-pointer transition-all duration-200 hover:not-disabled:bg-red-700 hover:not-disabled:-translate-y-[1px] hover:not-disabled:shadow-[0_4px_12px_rgba(220,38,38,0.3)] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Đang gửi...' : 'Xác nhận đặt lịch'}
+                </button>
+
+              </form>
+            </>
+          ) : (
+            /* ── Success state ── */
+            <div className="text-center py-5">
+              <div className="w-[56px] h-[56px] rounded-full bg-green-100 border border-green-200 text-green-600 text-[24px] flex items-center justify-center mx-auto mb-4">
+                ✓
+              </div>
+              <h2 className="text-[20px] font-extrabold text-[#111] mb-2">Đặt lịch thành công!</h2>
+              <p className="text-[13px] text-gray-600 mb-1">Chúng tôi sẽ liên hệ xác nhận trong vòng 24 giờ.</p>
+              <p className="text-[#111] font-bold mt-3 mb-1">
+                {activeCar} — {watch('showroom')}
               </p>
-
-              {/* Error từ API */}
-              {apiError && <div className="td-api-error">{apiError}</div>}
-
-              {/* Submit */}
-              <button type="submit" className="td-submit" disabled={loading}>
-                {loading ? 'Đang gửi...' : 'Xác nhận đặt lịch'}
+              <p className="text-red-600 font-semibold mb-6">
+                {watch('date')} lúc {watch('time')}
+              </p>
+              <button 
+                onClick={onClose}
+                className="w-full p-[14px] bg-red-600 text-white text-[13px] font-bold tracking-[0.1em] uppercase border-none rounded-[10px] cursor-pointer transition-all duration-200 hover:bg-red-700 hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
+              >
+                Quay lại showroom
               </button>
+            </div>
+          )}
 
-            </form>
-          </>
-        ) : (
-          /* ── Success state ── */
-          <div className="td-success">
-            <div className="td-success-icon">✓</div>
-            <h2>Đặt lịch thành công!</h2>
-            <p>Chúng tôi sẽ liên hệ xác nhận trong vòng 24 giờ.</p>
-            <p className="td-success-car">
-              {activeCar} — {watch('showroom')}
-            </p>
-            <p className="td-success-time">
-              {watch('date')} lúc {watch('time')}
-            </p>
-            <button className="td-submit" onClick={onClose}>
-              Quay lại showroom
-            </button>
-          </div>
-        )}
-
+        </div>
       </div>
-    </div>
+
+      {/* Inject custom animations & scrollbar to keep component standalone */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes tdFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes tdSlideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        .animate-td-fade-in {
+          animation: tdFadeIn 0.2s ease;
+        }
+        .animate-td-slide-up {
+          animation: tdSlideUp 0.3s ease;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+        .custom-calendar-icon::-webkit-calendar-picker-indicator {
+          cursor: pointer;
+          opacity: 0.5;
+        }
+        .custom-calendar-icon::-webkit-calendar-picker-indicator:hover {
+          opacity: 1;
+        }
+      `}} />
+    </>
   );
 }

@@ -8,7 +8,7 @@ import { CAR_DATA } from '../../data/carData';
 export const MODEL_REGISTRY = {
   'GT3 RS': {
     glbPath: '/models/gt3rs_opt.glb',
-    scale: 1,
+    scale: 2,
     rotationY: 0,
     positionOffset: [0, 0, 0],
     paintableMaterials: ['material.005', 'material_0'],
@@ -19,15 +19,15 @@ export const MODEL_REGISTRY = {
     scale: 110,                 
     rotationY: -Math.PI / 2,    
     positionOffset: [0, 0, 0],  
-    paintableMaterials: ['paint'], // 🎯 Đã áp dụng từ khóa bắn tỉa chuẩn
+    paintableMaterials: ['paint'],
     accentMaterials:    ['hood', 'wing'],
   },
   '911 TURBO S': {
     glbPath: '/models/turbos_opt.glb',
-    scale: 110,                   
+    scale: 150,                   
     rotationY: 0,
     positionOffset: [0, 0, 0],  
-    paintableMaterials: ['palettematerial005', 'regiona_1'], // 🎯 Đã áp dụng từ khóa bắn tỉa chuẩn
+    paintableMaterials: ['palettematerial005', 'regiona_1'],
     accentMaterials:    [],
   },
 };
@@ -35,26 +35,23 @@ export const MODEL_REGISTRY = {
 export default function AutoCenteredCar() {
   const activeCar   = useCarStore((state) => state.activeCar) ?? 'GT3 RS';
   const carColor    = useCarStore((state) => state.carColor);
-  
-  // Lấy thêm hàm setCarColor từ store để có thể reset màu
   const setCarColor = useCarStore((state) => state.setCarColor); 
   const invalidate  = useThree((state) => state.invalidate);
 
   const modelInfo = MODEL_REGISTRY[activeCar] ?? MODEL_REGISTRY['GT3 RS'];
   
-  // ── Bước 0: CLONE (NHÂN BẢN) ĐỂ GIỮ NGUYÊN MÀU GỐC ──
-  // Thay vì dùng thẳng bản gốc, chúng ta copy ra một bản để nếu carColor = null, nó sẽ hiện bản gốc này!
+  // ── Bước 0: CLONE SCENE ──
   const { scene: originalScene } = useGLTF(modelInfo.glbPath);
   const scene = useMemo(() => originalScene.clone(), [originalScene]);
 
   // ── MỚI: TỰ ĐỘNG XÓA MÀU KHI CHUYỂN XE KHÁC ──
   useEffect(() => {
     if (setCarColor) {
-      setCarColor(null); // Trả carColor về null để hiển thị màu gốc
+      setCarColor(null);
     }
   }, [activeCar, setCarColor]);
 
-  // ── Bước 1: Tính toán tâm hình học thuần khiết ──
+  // ── Bước 1: Tính toán tâm hình học ──
   const { center, minY } = useMemo(() => {
     if (!scene) return { center: new THREE.Vector3(), minY: 0 };
     scene.position.set(0, 0, 0);
@@ -88,25 +85,22 @@ export default function AutoCenteredCar() {
     invalidate();
   }, [scene, invalidate]);
 
-  // ── Bước 3: Đổi màu sơn vỏ xe ──
+  // ── Bước 3: Đổi màu sơn vỏ xe (Đã tối ưu Memory & Phục hồi màu gốc) ──
   useEffect(() => {
-    // 💡 ĐIỂM QUAN TRỌNG: Nếu chưa chọn màu (carColor = null), code sẽ DỪNG LẠI TẠI ĐÂY
-    // Lúc này chiếc xe đang là bản clone nên nó sẽ giữ 100% texture và màu gốc!
-    if (!scene || !carColor) return;
+    if (!scene) return;
 
-    const targetColor = new THREE.Color(carColor);
+    const targetColor = carColor ? new THREE.Color(carColor) : null;
     const carData     = CAR_DATA[activeCar];
     const colorData   = carData?.colors.find(
-      (c) => c.hex.toLowerCase() === carColor.toLowerCase()
+      (c) => c.hex.toLowerCase() === (carColor || '').toLowerCase()
     );
 
     const roughness  = colorData?.roughness  ?? 0.22;
     const metalness  = colorData?.metalness  ?? 0.6;
     const isMetallic = colorData?.metallic   ?? false;
-    const isBlackCar = ['#000000', '#0a0a0a', '#0d0d0d', '#111111']
+    const isBlackCar = carColor && ['#000000', '#0a0a0a', '#0d0d0d', '#111111']
       .includes(carColor.toLowerCase());
 
-    // Đã phục hồi hàm kiểm tra CHUẨN XÁC soi cả Mesh Name và Mat Name để bảo vệ bánh xe
     const isPaintable = (child) => {
       const meshName = (child.name || '').toLowerCase();
       const matName  = (child.material?.name || '').toLowerCase();
@@ -119,9 +113,7 @@ export default function AutoCenteredCar() {
       ];
 
       if (blackList.some(k => meshName.includes(k) || matName.includes(k))) return false;
-      
       if (modelInfo.paintableMaterials?.includes('*')) return true;
-
       return (modelInfo.paintableMaterials ?? [])
         .some(p => matName.includes(p.toLowerCase()) || meshName.includes(p.toLowerCase()));
     };
@@ -138,8 +130,27 @@ export default function AutoCenteredCar() {
     scene.traverse((child) => {
       if (!child.isMesh || !child.material) return;
 
+      // 🎯 1. BẢO TỒN: Lưu lại material gốc (từ file 3D) vào userData
+      if (!child.userData.originalMaterial) {
+        child.userData.originalMaterial = child.material;
+      }
+
+      // 🎯 2. RESET: Nếu chưa chọn màu (carColor = null), phục hồi lại nguyên trạng material gốc
+      if (!carColor) {
+        if (child.material !== child.userData.originalMaterial) {
+          child.material.dispose(); 
+          child.material = child.userData.originalMaterial; 
+        }
+        return;
+      }
+
+      
       if (isPaintable(child)) {
-        const m = child.material.clone();
+        if (child.material !== child.userData.originalMaterial) {
+          child.material.dispose(); 
+        }
+        
+        const m = child.userData.originalMaterial.clone();
         m.map                = null;
         m.roughnessMap       = null;
         m.metalnessMap       = null;
@@ -151,10 +162,15 @@ export default function AutoCenteredCar() {
         m.clearcoatRoughness = isMetallic ? 0.12 : 0.04;
         m.envMapIntensity    = 3.0;
         m.needsUpdate        = true;
-        child.material       = m;
+        
+        child.material = m;
 
       } else if (isAccent(child)) {
-        const m = child.material.clone();
+        if (child.material !== child.userData.originalMaterial) {
+          child.material.dispose();
+        }
+        
+        const m = child.userData.originalMaterial.clone();
         m.map = null;
         if (isBlackCar) {
           m.color.set('#ffffff'); m.roughness = 0.2; m.metalness = 0.5;
@@ -162,6 +178,7 @@ export default function AutoCenteredCar() {
           m.color.set('#1a1a1a'); m.roughness = 0.6; m.metalness = 0.3;
         }
         m.needsUpdate  = true;
+        
         child.material = m;
       }
     });
