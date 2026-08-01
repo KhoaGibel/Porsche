@@ -1,6 +1,7 @@
 import { Suspense, useState, useEffect, lazy } from 'react';
 import { Loader } from '@react-three/drei';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'; 
+import { motion, useScroll, useTransform, useMotionValueEvent, useInView } from 'framer-motion'; 
+import { useRef } from 'react';
 import { useIsMobile } from './hooks/useIsMobile';
 import './App.css'; 
 
@@ -34,6 +35,12 @@ const gt3rsImageUrl    = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_au
 const gt3ImageUrl = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png';
 const turboSImageUrl ='https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png';
 const historyBgUrl     = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg';
+
+function InViewWrapper({ children, margin = "600px" }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin });
+  return <div ref={ref} className="w-full h-full">{isInView ? children : null}</div>;
+}
 
 export default function App() {
   const isSidebarOpen = useCarStore((state) => state.isSidebarOpen);
@@ -166,7 +173,9 @@ export default function App() {
           style={{ touchAction: 'pan-y' }}
         >
           <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-black text-white/50">Đang tải Showroom 3D...</div>}>
-            <ShowroomCanvas slideDir={slideDir} />
+            <InViewWrapper margin="800px">
+              <ShowroomCanvas slideDir={slideDir} />
+            </InViewWrapper>
           </Suspense>
 
           <CinematicPreloader isSuspenseFallback={false} />
@@ -229,19 +238,27 @@ export default function App() {
       
       <Suspense fallback={<div className="w-full min-h-[100dvh] bg-transparent" />}>
         <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-          <StatsSection carModel={selectedCar} />
+          <InViewWrapper margin="400px">
+            <StatsSection carModel={selectedCar} />
+          </InViewWrapper>
         </div>
 
         <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-          <TrackMap carModel={selectedCar} />
+          <InViewWrapper margin="400px">
+            <TrackMap carModel={selectedCar} />
+          </InViewWrapper>
         </div>
 
         <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-          <EngineSoundPlayer carModel={selectedCar} />
+          <InViewWrapper margin="400px">
+            <EngineSoundPlayer carModel={selectedCar} />
+          </InViewWrapper>
         </div>
 
         <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-          <DnaCar carModel={selectedCar} onView3D={jumpToCar} />
+          <InViewWrapper margin="400px">
+            <DnaCar carModel={selectedCar} onView3D={jumpToCar} />
+          </InViewWrapper>
         </div>
       </Suspense>
 
