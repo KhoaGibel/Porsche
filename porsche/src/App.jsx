@@ -183,7 +183,7 @@ export default function App() {
           <CinematicPreloader isSuspenseFallback={false} />
 
           <div className="absolute bottom-[5.5rem] left-1/2 -translate-x-1/2 text-center pointer-events-none z-20 font-['PorscheFont',sans-serif]">
-            <p className="text-[11px] font-semibold tracking-[0.5em] text-white/40 uppercase mb-1 drop-shadow-md">PORSCHE</p>
+            <p className="text-[11px] font-semibold tracking-[0.5em] text-white/70 uppercase mb-1 drop-shadow-md">PORSCHE</p>
             <h2 className="text-2xl md:text-[26px] font-normal tracking-[0.3em] text-white-800 drop-shadow-sm mix-blend-difference uppercase">{CAR_LIST[carIndex].label}</h2>
           </div>
 

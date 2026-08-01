@@ -58,8 +58,8 @@ export default function Footer() {
       {/* ── PHẦN DƯỚI: MÀU ĐEN TUYỆT ĐỐI ── */}
       <div className="bg-black py-[30px] px-[5%] border-t border-white/5">
         <div className="max-w-[1200px] mx-auto flex flex-col gap-3">
-          <p className="m-0 text-[13px] text-white/40">© Porsche Việt Nam 2026</p>
-          <a href="https://porsche-vietnam.vn/chinh-sach-quyen-rieng-tu/" className="text-white/40 text-[13px] underline underline-offset-4 w-fit transition-colors duration-300 hover:text-white">
+          <p className="m-0 text-[13px] text-white/70">© Porsche Việt Nam 2026</p>
+          <a href="https://porsche-vietnam.vn/chinh-sach-quyen-rieng-tu/" className="text-white/70 text-[13px] underline underline-offset-4 w-fit transition-colors duration-300 hover:text-white">
             Chính sách quyền riêng tư
           </a>
         </div>
