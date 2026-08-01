@@ -16,7 +16,7 @@ export const MODEL_REGISTRY = {
   },
   'GT3': {
     glbPath: '/models/gt3_opt.glb',
-    scale: 110,
+    scale: 115,
     rotationY: -Math.PI / 2,
     positionOffset: [0, 0, 0],
     paintableMaterials: ['paint'],
