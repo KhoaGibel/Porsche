@@ -7,6 +7,9 @@ const pool = mysql.createPool({
   user:     process.env.MYSQL_USER     ?? 'root',
   password: process.env.MYSQL_PASSWORD ?? '',
   database: process.env.MYSQL_DATABASE ?? 'porsche_payments',
+  ssl: {
+    rejectUnauthorized: false
+  },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,

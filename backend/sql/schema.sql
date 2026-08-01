@@ -1,1 +1,65 @@
-    
+CREATE TABLE IF NOT EXISTS orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_number VARCHAR(50) NOT NULL UNIQUE,
+  mongo_user_id VARCHAR(50) DEFAULT NULL,
+  
+  full_name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  id_card VARCHAR(50) NOT NULL,
+  date_of_birth DATE DEFAULT NULL,
+  address TEXT DEFAULT NULL,
+  
+  plan_id VARCHAR(50) DEFAULT NULL,
+  plan_name VARCHAR(100) DEFAULT NULL,
+  base_price DECIMAL(15, 2) DEFAULT 0,
+  
+  insurance_id VARCHAR(50) DEFAULT NULL,
+  insurance_name VARCHAR(100) DEFAULT NULL,
+  insurance_price DECIMAL(15, 2) DEFAULT 0,
+  
+  total_amount DECIMAL(15, 2) NOT NULL,
+  
+  drive_date DATE DEFAULT NULL,
+  drive_time VARCHAR(20) DEFAULT NULL,
+  showroom VARCHAR(100) DEFAULT NULL,
+  note TEXT DEFAULT NULL,
+  
+  status VARCHAR(50) DEFAULT 'pending_payment',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  method VARCHAR(50) NOT NULL,
+  amount DECIMAL(15, 2) NOT NULL,
+  status VARCHAR(50) DEFAULT 'initiated',
+  
+  card_last4 VARCHAR(4) DEFAULT NULL,
+  card_brand VARCHAR(50) DEFAULT NULL,
+  
+  gateway_txn_id VARCHAR(100) DEFAULT NULL,
+  gateway_response TEXT DEFAULT NULL,
+  
+  cash_confirmed_by VARCHAR(100) DEFAULT NULL,
+  cash_confirmed_at TIMESTAMP NULL DEFAULT NULL,
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS order_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  old_status VARCHAR(50) DEFAULT NULL,
+  new_status VARCHAR(50) NOT NULL,
+  changed_by VARCHAR(100) DEFAULT 'system',
+  note TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
