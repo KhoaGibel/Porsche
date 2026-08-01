@@ -36,10 +36,23 @@ const gt3ImageUrl = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_
 const turboSImageUrl ='https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png';
 const historyBgUrl     = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg';
 
-function InViewWrapper({ children, margin = "600px" }) {
+function InViewWrapper({ children, margin = "600px", triggerDelay = 0 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin });
-  return <div ref={ref} className="w-full h-full">{isInView ? children : null}</div>;
+  const [isTriggered, setIsTriggered] = useState(false);
+
+  useEffect(() => {
+    if (isInView) setIsTriggered(true);
+  }, [isInView]);
+
+  useEffect(() => {
+    if (triggerDelay > 0) {
+      const timer = setTimeout(() => setIsTriggered(true), triggerDelay);
+      return () => clearTimeout(timer);
+    }
+  }, [triggerDelay]);
+
+  return <div ref={ref} className="w-full h-full">{isTriggered ? children : null}</div>;
 }
 
 export default function App() {
@@ -175,7 +188,7 @@ export default function App() {
           style={{ touchAction: 'pan-y' }}
         >
           <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-black text-white/50">Đang tải Showroom 3D...</div>}>
-            <InViewWrapper margin="800px">
+            <InViewWrapper margin="800px" triggerDelay={3500}>
               <ShowroomCanvas slideDir={slideDir} />
             </InViewWrapper>
           </Suspense>
