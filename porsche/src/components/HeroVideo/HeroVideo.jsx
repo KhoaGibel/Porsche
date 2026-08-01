@@ -5,7 +5,7 @@ const HERO_DATA = {
   'GT3 RS': {
     title: 'PORSCHE 911 GT3 RS',
     tagline: 'Sinh ra từ đường đua. Thừa hưởng DNA chiến thắng.',
-    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4',
+    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/f_auto,q_auto/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4',
     accentColor: '#dc2626', // Đỏ
     hud: {
       sysStatus: 'AERODYNAMICS: AUTO_MODE',
@@ -17,7 +17,7 @@ const HERO_DATA = {
   'GT3': {
     title: 'PORSCHE 911 GT3',
     tagline: 'Cân bằng hoàn hảo. Thuần khiết trên từng góc lái.',
-    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4', 
+    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/f_auto,q_auto/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4', 
     accentColor: '#3b82f6', // Xanh dương
     hud: {
       sysStatus: 'AERODYNAMICS: TOURING_MODE',
@@ -29,7 +29,7 @@ const HERO_DATA = {
   '911 TURBO S': {
     title: 'PORSCHE 911 TURBO S',
     tagline: 'Vũ khí tối thượng. Đỉnh cao hiệu suất hàng ngày.',
-    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4',
+    videoSrc: 'https://res.cloudinary.com/dq8xgcqhk/video/upload/f_auto,q_auto/v1784016324/6872078-hd_1280_720_25fps_unmfun.mp4',
     accentColor: '#d4af37', // Vàng Porsche
     hud: {
       sysStatus: 'AERODYNAMICS: PAA_ACTIVE',
@@ -63,9 +63,10 @@ export default function HeroVideo({ carModel = 'GT3 RS' }) {
         loop 
         muted 
         playsInline 
+        poster="https://res.cloudinary.com/dq8xgcqhk/video/upload/f_auto,q_auto,so_0/v1784016324/6872078-hd_1280_720_25fps_unmfun.jpg"
         className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-85"
       >
-        <source src={data.videoSrc} type="video/mp4" />
+        <source src={data.videoSrc} />
       </video>
 
       {/* 3. LỚP PHỦ HUD CHI TIẾT KỸ THUẬT */}

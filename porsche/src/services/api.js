@@ -102,6 +102,13 @@ export const subAPI = {
   cancel: () => authFetch('/subscriptions/cancel', { method: 'POST' })
 };
 
+// ─────────────────────────────────────────────
+// PAYMENT
+// ─────────────────────────────────────────────
+export const paymentAPI = {
+  createPayment: (body) => authFetch('/payments/create', { method: 'POST', body: JSON.stringify(body) })
+};
+
 // Helpers quản lý Token
 export const saveToken  = (token) => localStorage.setItem('porsche_token', token);
 export const clearToken = ()      => localStorage.removeItem('porsche_token');

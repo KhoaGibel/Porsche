@@ -14,6 +14,18 @@ export default defineConfig({
     minify: true, 
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three')) return 'vendor-three';
+            if (id.includes('@react-three')) return 'vendor-r3f';
+            if (id.includes('framer-motion')) return 'vendor-framer';
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   server: {
     proxy: { '/api': { target: 'http://localhost:5000', changeOrigin: true } },

@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
+import { paymentAPI } from '../../services/api';
 import { PLANS, INSURANCE, fmt, TIME_SLOTS, SHOWROOMS } from '../../data/testDrivePlans';
 import './PaymentPage.css';
  
@@ -56,8 +57,9 @@ export default function PaymentPage() {
  
   const [payMethod,  setPayMethod]  = useState('momo');
   const [submitting, setSubmitting] = useState(false);
-  const [step,       setStep]       = useState('form'); // 'form' | 'processing' | 'success' | 'error'
+  const [step,       setStep]       = useState('form'); // 'form' | 'processing' | 'qr' | 'success' | 'error'
   const [orderNum,   setOrderNum]   = useState('');
+  const [qrData,     setQrData]     = useState(null);
  
   const {
     register,
@@ -99,47 +101,49 @@ export default function PaymentPage() {
     setStep('processing');
  
     try {
-      const res = await fetch('/api/payments/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('porsche_token')}`,
-        },
-        body: JSON.stringify({
-          // Thông tin khách hàng
-          fullName:  data.fullName,
-          email:     data.email,
-          phone:     data.phone,
-          idCard:    data.idCard,
-          dob:       data.dob,
-          address:   data.address,
-          // Lịch lái thử
-          driveDate: data.driveDate,
-          driveTime: data.driveTime,
-          showroom:  data.showroom,
-          note:      data.note,
-          // Gói & bảo hiểm
-          planId:       plan.id,
-          planName:     plan.name,
-          insuranceId:  ins.id,
-          insuranceName:ins.name,
-          // Thanh toán
-          paymentMethod: payMethod,
-          basePrice:     plan.price,
-          insurancePrice: ins.price,
-          totalAmount:   total,
-        }),
+      const json = await paymentAPI.createPayment({
+        // Thông tin khách hàng
+        fullName:  data.fullName,
+        email:     data.email,
+        phone:     data.phone,
+        idCard:    data.idCard,
+        dob:       data.dob,
+        address:   data.address,
+        // Lịch lái thử
+        driveDate: data.driveDate,
+        driveTime: data.driveTime,
+        showroom:  data.showroom,
+        note:      data.note,
+        // Gói & bảo hiểm
+        planId:       plan.id,
+        planName:     plan.name,
+        insuranceId:  ins.id,
+        insuranceName:ins.name,
+        // Thanh toán
+        paymentMethod: payMethod,
+        basePrice:     plan.price,
+        insurancePrice: ins.price,
+        totalAmount:   total,
       });
- 
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message);
  
       setOrderNum(json.orderNumber);
  
-      // Redirect đến cổng thanh toán
-      if (json.paymentUrl) {
+      // Hiển thị QR Code nếu có
+      if (json.qrUrl) {
+        setQrData({
+          qrUrl: json.qrUrl,
+          amount: json.amount,
+          method: json.method,
+          orderNumber: json.orderNumber,
+        });
+        setStep('qr');
+      } 
+      // Redirect nếu backend trả về URL cổng thanh toán
+      else if (json.paymentUrl) {
         window.location.href = json.paymentUrl;
-      } else {
+      } 
+      // Mặc định thành công
+      else {
         setStep('success');
       }
     } catch (err) {
@@ -160,6 +164,31 @@ export default function PaymentPage() {
         />
         <h2>Đang xử lý thanh toán...</h2>
         <p>Vui lòng không đóng trình duyệt</p>
+      </div>
+    </div>
+  );
+ 
+  // ── QR Code screen ──
+  if (step === 'qr' && qrData) return (
+    <div className="pay-page">
+      <div className="pay-qr-container">
+        <h1 className="pay-qr-title">
+          Quét mã {qrData.method.toUpperCase()} để thanh toán
+        </h1>
+        <div className="pay-qr-box">
+          <img src={qrData.qrUrl} alt="QR Code" className="pay-qr-image" />
+        </div>
+        <div className="pay-qr-info">
+          <p>Số tiền: <strong>{fmt(qrData.amount)}</strong></p>
+          <p>Nội dung: <strong>{qrData.orderNumber}</strong></p>
+        </div>
+        <p className="pay-qr-note">Vui lòng sử dụng ứng dụng Ngân hàng hoặc Ví điện tử để quét mã này.</p>
+        <button 
+          className="pay-btn primary pay-qr-confirm" 
+          onClick={() => setStep('success')}
+        >
+          Tôi đã thanh toán
+        </button>
       </div>
     </div>
   );

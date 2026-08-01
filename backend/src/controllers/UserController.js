@@ -1,5 +1,6 @@
 // src/controllers/userController.js
 import User from '../models/User.js';
+import TestDrive from '../models/TestDrive.js';
 
 // ─────────────────────────────────────────────
 // GET /api/users/profile

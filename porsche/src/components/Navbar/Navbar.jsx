@@ -160,14 +160,28 @@ function Navbar({ selectedCar, setSelectedCar }) {
 
                             {/* 🎯 Bảng Dropdown Menu Khám phá */}
                             {isMenuDropdownOpen && (
-                                <div className="absolute right-0 mt-5 w-64 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
+                                <div className="absolute right-0 mt-5 w-64 bg-[#141414]/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 z-50 text-white transition-all duration-300" style={{ top: '100%' }}>
                                     <div className="px-4 py-3 border-b border-white/10 text-left">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Khám phá</p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Khám phá dòng xe</p>
+                                    </div>
+                                    <div className="py-1 border-b border-white/10 text-left">
+                                        {CAR_MODELS.map(car => (
+                                            <button 
+                                                key={car}
+                                                onClick={() => {
+                                                    handleCarSelect(car);
+                                                    setIsMenuDropdownOpen(false);
+                                                }} 
+                                                className={`w-full text-left px-4 py-3 text-sm font-bold transition-colors ${selectedCar === car ? 'text-[#dc2626] bg-white/5' : 'text-gray-200 hover:bg-white/10 hover:text-red-500'}`}
+                                            >
+                                                Porsche {car}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="px-4 py-3 border-b border-white/10 text-left">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Trải nghiệm</p>
                                     </div>
                                     <div className="py-1 text-left">
-                                        <button onClick={() => scrollToSection('hero-gt3rs')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-200 hover:bg-white/10 hover:text-red-500 transition-colors">
-                                            Porsche {selectedCar}
-                                        </button>
                                         <button onClick={() => scrollToSection('history-section')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-200 hover:bg-white/10 hover:text-red-500 transition-colors">
                                             Lịch sử huyền thoại
                                         </button>
@@ -236,8 +250,8 @@ function Navbar({ selectedCar, setSelectedCar }) {
 
                     <div className="mobile-menu-divider" />
                     <ul className="mobile-menu-section">
-                        <li className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Menu Khám phá</li>
-                        <li onClick={() => scrollToSection('hero-gt3rs')} className="cursor-pointer hover:text-red-500">Porsche {selectedCar}</li>
+                        <li className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Trải nghiệm</li>
+                        <li onClick={() => scrollToSection('hero-gt3rs')} className="cursor-pointer hover:text-red-500">Khám phá Video</li>
                         <li onClick={() => scrollToSection('history-section')} className="cursor-pointer hover:text-red-500">Lịch sử huyền thoại</li>
                         <li onClick={() => scrollToSection('3d-showroom')} className="cursor-pointer hover:text-red-500">Showroom 3D Cấu hình</li>
                     </ul>

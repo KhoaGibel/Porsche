@@ -85,16 +85,16 @@ export const createPayment = async (req, res) => {
       });
     }
  
-    // 🏦 ATM / Internet Banking — redirect sang cổng ngân hàng
+    // 🏦 ATM / Internet Banking — Trả về ảnh VietQR
     if (paymentMethod === 'atm') {
       const paymentId = await PaymentModel.create({
         orderId, method: 'atm', amount: totalAmount, status: 'initiated',
       });
  
-      // TODO: tích hợp cổng thanh toán ATM thật (NAPAS/OnePay)
-      const paymentUrl = buildAtmGatewayUrl({ orderId, orderNumber, amount: totalAmount, paymentId });
+      // Dùng API VietQR miễn phí để sinh ảnh QR thật
+      const qrUrl = `https://img.vietqr.io/image/970432-123456789-compact2.png?amount=${totalAmount}&addInfo=${orderNumber}&accountName=PORSCHE%20VIETNAM`;
  
-      return res.status(201).json({ orderNumber, orderId, paymentUrl });
+      return res.status(201).json({ orderNumber, orderId, qrUrl, amount: totalAmount, method: 'atm' });
     }
  
     // 💜 MOMO
@@ -103,9 +103,10 @@ export const createPayment = async (req, res) => {
         orderId, method: 'momo', amount: totalAmount, status: 'initiated',
       });
  
-      const paymentUrl = await buildMomoPaymentUrl({ orderId, orderNumber, amount: totalAmount, paymentId });
+      // Mã QR giả lập cho MoMo
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=MOMO_${orderNumber}_${totalAmount}`;
  
-      return res.status(201).json({ orderNumber, orderId, paymentUrl });
+      return res.status(201).json({ orderNumber, orderId, qrUrl, amount: totalAmount, method: 'momo' });
     }
  
     // 🔴 VNPAY
@@ -114,9 +115,10 @@ export const createPayment = async (req, res) => {
         orderId, method: 'vnpay', amount: totalAmount, status: 'initiated',
       });
  
-      const paymentUrl = buildVnpayUrl({ orderId, orderNumber, amount: totalAmount, paymentId, req });
+      // Mã QR giả lập cho VNPay
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=VNPAY_${orderNumber}_${totalAmount}`;
  
-      return res.status(201).json({ orderNumber, orderId, paymentUrl });
+      return res.status(201).json({ orderNumber, orderId, qrUrl, amount: totalAmount, method: 'vnpay' });
     }
  
   } catch (err) {
@@ -193,20 +195,4 @@ export const momoWebhook = async (req, res) => {
   }
 };
  
-// ── Helper functions xây URL cổng thanh toán (placeholder — điền config thật) ──
-function buildAtmGatewayUrl({ orderId, orderNumber, amount, paymentId }) {
-  // TODO: thay bằng tích hợp NAPAS/OnePay thật
-  return `https://sandbox.onepay.vn/pay?orderNumber=${orderNumber}&amount=${amount}&returnUrl=${process.env.FRONTEND_URL}/payment/return`;
-}
- 
-async function buildMomoPaymentUrl({ orderId, orderNumber, amount, paymentId }) {
-  // TODO: gọi MoMo API thật — cần partnerCode, accessKey, secretKey từ MoMo Business
-  // Docs: https://developers.momo.vn
-  return `https://test-payment.momo.vn/v2/gateway/pay?orderId=${orderNumber}&amount=${amount}`;
-}
- 
-function buildVnpayUrl({ orderId, orderNumber, amount, paymentId, req }) {
-  // TODO: gọi VNPay API thật — cần vnp_TmnCode, vnp_HashSecret
-  // Docs: https://sandbox.vnpayment.vn/apis/docs/huong-dan-tich-hop/
-  return `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_TxnRef=${orderNumber}&vnp_Amount=${amount * 100}`;
-}
+// ── Helper functions xây URL cổng thanh toán (Đã thay bằng QR Code) ──

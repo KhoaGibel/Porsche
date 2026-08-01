@@ -142,7 +142,7 @@ export default function TrackMap({ carModel = 'GT3 RS' }) {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-[400vh] bg-[#030303] overflow-visible"
+      className="relative w-full h-[200vh] bg-transparent overflow-visible"
       style={{ '--theme-color': stats.color, '--theme-rgb': stats.rgb }}
     >
       <div className="sticky top-0 w-full h-[100dvh] flex items-center overflow-hidden">
@@ -224,14 +224,7 @@ export default function TrackMap({ carModel = 'GT3 RS' }) {
 
             <svg viewBox="300 30 650 600" className="w-full max-w-[750px] h-auto relative z-10 p-5 drop-shadow-[0_0_25px_rgba(0,0,0,0.6)]" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <filter id="glow-track">
-                  <feGaussianBlur stdDeviation="3" result="blur"/>
-                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <filter id="glow-dot">
-                  <feGaussianBlur stdDeviation="5" result="blur"/>
-                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
+                {/* 🎯 Optimized: Removed heavy SVG glow filters */}
               </defs>
   
               <path d={TRACK_PATH} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" strokeLinecap="round"/>
@@ -245,7 +238,7 @@ export default function TrackMap({ carModel = 'GT3 RS' }) {
                 strokeLinecap="round"
                 strokeDasharray={pathLength || 2000}
                 style={{ strokeDashoffset: pathDashoffset }}
-                filter="url(#glow-track)"
+                // filter="url(#glow-track)" 🎯 Optimized: Removed
               />
   
               {milestoneCoords.map((m, i) => {
@@ -267,7 +260,7 @@ export default function TrackMap({ carModel = 'GT3 RS' }) {
               })}
   
               <g ref={dotRef}>
-                <circle cx={0} cy={0} r="10" fill="var(--theme-color)" filter="url(#glow-dot)"/>
+                <circle cx={0} cy={0} r="10" fill="var(--theme-color)" opacity="0.5" />
                 <circle cx={0} cy={0} r="5" fill="#ffffff"/>
               </g>
             </svg>

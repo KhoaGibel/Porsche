@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
   RadarChart, PolarGrid, PolarAngleAxis,
@@ -62,11 +62,17 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-export default function DnaCar() {
+export default function DnaCar({ carModel }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-10%' });
   
-  const [selectedCars, setSelectedCars] = useState(['GT3 RS', 'GT3']);
+  const [selectedCars, setSelectedCars] = useState(carModel ? [carModel] : ['GT3 RS', 'GT3']);
+
+  useEffect(() => {
+    if (carModel && !selectedCars.includes(carModel)) {
+      setSelectedCars([carModel]);
+    }
+  }, [carModel]);
 
   const handleCarClick = (car) => {
     if (selectedCars.includes(car)) {
@@ -79,14 +85,10 @@ export default function DnaCar() {
   };
 
   return (
-    // 🎯 Tăng pt-[120px] md:pt-[140px] để ép toàn bộ nội dung xuống dưới Navbar
-    <section ref={ref} className="relative bg-[#030303] min-h-[100dvh] pt-[120px] md:pt-[140px] pb-12 px-[5%] flex flex-col items-center overflow-hidden z-10">
+    <section ref={ref} className="relative bg-transparent min-h-[100dvh] py-24 px-[5%] flex flex-col justify-center items-center overflow-hidden z-10">
       
-      {/* Noise texture overlay */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")` }}
-      />
+      {/* Noise texture overlay - Removed heavy SVG noise */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.01] bg-white mix-blend-overlay" />
 
       {/* Header - Thu nhỏ font chữ để gọn gàng hơn */}
       <motion.div 
@@ -109,15 +111,17 @@ export default function DnaCar() {
       {/* 🎯 Bóp max-width từ 1000px xuống 900px, khoảng cách gap nhỏ lại */}
       <div className="w-full max-w-[900px] grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 md:gap-12 items-center relative z-10">
         
-        {/* Radar chart */}
+        {/* Radar chart 3D Hologram */}
         <motion.div 
-          className="relative w-full custom-radar-chart flex justify-center"
-          initial={{ opacity:0, scale:0.95 }}
-          animate={isInView ? { opacity:1, scale:1 } : {}}
-          transition={{ duration:0.8, delay:0.2 }}
+          className="relative w-full custom-radar-chart flex justify-center perspective-1000"
+          initial={{ opacity:0, scale:0.8, rotateX: 25, rotateY: -10 }}
+          animate={isInView ? { opacity:1, scale:1, rotateX: 25, rotateY: -10 } : {}}
+          whileHover={{ rotateX: 10, rotateY: 0, scale: 1.05 }}
+          transition={{ duration:0.8, delay:0.2, type: "spring", stiffness: 50 }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
-          {/* Hào quang gradient chìm phía sau Radar */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] rounded-full blur-3xl opacity-25 bg-white/10 pointer-events-none" />
+          {/* Hào quang gradient chìm phía sau Radar - Optimized (No CSS Blur) */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full opacity-40 bg-[radial-gradient(circle,rgba(255,255,255,0.15)_0%,transparent_60%)] pointer-events-none" style={{ transform: 'translateZ(-50px)' }} />
           
           <ResponsiveContainer width="100%" height={340}>
             <RadarChart data={DNA_DATA} margin={{ top:25, right:35, bottom:25, left:35 }}>
@@ -128,6 +132,10 @@ export default function DnaCar() {
 
               {Object.entries(CAR_COLORS).map(([car, color]) => {
                 const isVisible = selectedCars.includes(car);
+                
+                // 🎯 ĐÃ SỬA: Bọc trong điều kiện isVisible để kích hoạt animation "vẽ" của Recharts khi bật/tắt
+                if (!isVisible) return null;
+
                 return (
                   <Radar
                     key={car}
@@ -135,20 +143,15 @@ export default function DnaCar() {
                     dataKey={car}
                     stroke={color}
                     fill={color}
-                    // 🎯 Tăng độ đậm nhạt và độ dày viền
-                    fillOpacity={isVisible ? 0.25 : 0}
-                    strokeWidth={isVisible ? 3 : 0}
-                    strokeOpacity={isVisible ? 1 : 0}
+                    fillOpacity={0.3}
+                    strokeWidth={3}
                     // 🎯 THÊM DOTS (Chấm tròn ở các đỉnh) ĐỂ TẠO ĐIỂM NHẤN SCI-FI
-                    dot={isVisible ? { r: 4, fill: '#030303', stroke: color, strokeWidth: 2 } : false}
-                    activeDot={isVisible ? { r: 6, fill: color, stroke: '#fff', strokeWidth: 2 } : false}
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
-                    // 🎯 Tăng mạnh hiệu ứng Glowing
+                    dot={{ r: 4, fill: '#030303', stroke: color, strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: color, stroke: '#fff', strokeWidth: 2 }}
+                    isAnimationActive={false} // 🎯 Optimized: Disable heavy SVG animation for Radar
+                    // 🎯 Optimized: Reduced glowing filter for performance
                     style={{ 
-                      filter: isVisible ? `drop-shadow(0px 0px 12px ${color})` : 'none',
-                      transition: 'all 0.5s ease'
+                      filter: 'none'
                     }}
                   />
                 );
@@ -217,11 +220,14 @@ export default function DnaCar() {
 
       {/* Cấu hình CSS cho Recharts */}
       <style dangerouslySetInnerHTML={{__html: `
+        .perspective-1000 {
+          perspective: 1000px;
+        }
         .custom-radar-chart .recharts-polar-grid-concentric-polygon {
           stroke: rgba(255,255,255,0.1) !important;
         }
-        .custom-radar-chart .recharts-polygon {
-          transition: fill-opacity 0.4s ease, stroke-width 0.4s ease;
+        .custom-radar-chart .recharts-polar-grid-angle-line {
+          stroke: rgba(255,255,255,0.1) !important;
         }
       `}} />
     </section>

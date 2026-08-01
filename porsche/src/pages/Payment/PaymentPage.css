@@ -1,177 +1,165 @@
+@reference "../../index.css";
 
 /* ── Page wrapper ── */
 .pay-page {
-  @apply min-h-screen relative overflow-x-hidden;
-  background: #080808;
-  color: white;
+  @apply min-h-screen relative pb-24;
+  background: #f9fafb; /* Light background */
+  color: #111827;
 }
 
-/* Background radial glow */
+/* Background glow */
 .pay-bg {
   @apply fixed inset-0 pointer-events-none;
-  background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(220,38,38,0.06) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 40% at 80% 70%, rgba(212,175,55,0.04) 0%, transparent 50%);
+  background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(220,38,38,0.03) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 70%, rgba(212,175,55,0.02) 0%, transparent 50%);
 }
 
 /* ── Header ── */
 .pay-header {
-  @apply relative z-10 px-6 md:px-12 pt-28 pb-8 max-w-7xl mx-auto;
+  @apply relative z-10 px-4 md:px-8 pt-10 pb-6 max-w-7xl mx-auto;
 }
 .pay-back {
-  @apply text-xs tracking-widest text-white/40 hover:text-white/80
-         transition-colors duration-200 mb-4 inline-block;
+  @apply text-xs tracking-widest text-gray-500 hover:text-gray-900
+         transition-colors duration-200 mb-4 inline-block font-semibold bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm;
   letter-spacing: 0.15em;
 }
 .pay-eyebrow {
-  @apply text-[10px] font-bold tracking-[0.35em] uppercase text-red-500 mb-3 block;
+  @apply text-[10px] font-bold tracking-[0.35em] uppercase text-red-600 mb-3 block;
 }
 .pay-title {
-  @apply text-3xl md:text-4xl font-light text-white tracking-tight;
+  @apply text-3xl md:text-4xl font-bold text-gray-900 tracking-tight;
 }
 
 /* ── 2-column layout ── */
 .pay-layout {
-  @apply relative z-10 max-w-7xl mx-auto px-6 md:px-12 pb-20
-         grid gap-8;
-  grid-template-columns: 1fr 360px;
+  @apply relative z-10 max-w-7xl mx-auto px-4 md:px-8 pb-20
+         grid gap-6 md:gap-8;
+  grid-template-columns: 1fr;
 }
-@media (max-width: 1024px) {
-  .pay-layout { grid-template-columns: 1fr; }
+@media (min-width: 1024px) {
+  .pay-layout { grid-template-columns: 1fr 380px; }
 }
 
 /* ── Cards ── */
 .pay-card {
-  @apply rounded-2xl p-6 md:p-8 mb-6;
-  background: rgba(255,255,255,0.04);
-  border: 0.5px solid rgba(255,255,255,0.09);
-  backdrop-filter: blur(12px);
+  @apply rounded-2xl p-5 md:p-8 mb-6 bg-white shadow-sm border border-gray-200;
 }
 
 .pay-card-title {
-  @apply flex items-center gap-3 text-base font-semibold text-white mb-6;
+  @apply flex items-center gap-3 text-lg font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100;
 }
 .pay-step-num {
   @apply w-7 h-7 rounded-full flex items-center justify-center
          text-xs font-bold text-white flex-shrink-0;
-  background: rgba(220,38,38,0.8);
+  background: #dc2626; /* Red 600 */
 }
 
 /* ── Form grids ── */
 .pay-grid-2 {
-  @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-5;
 }
 
 /* ── Form fields ── */
 .pay-field {
-  @apply flex flex-col gap-1.5 mb-4;
+  @apply flex flex-col gap-2 mb-5;
 }
 .pay-field label {
-  @apply text-[11px] font-semibold uppercase tracking-widest text-white/45;
+  @apply text-[11px] font-bold uppercase tracking-widest text-gray-600;
 }
-.req { @apply text-red-500; }
+.req { @apply text-red-600; }
 
 .pay-field input,
 .pay-field select,
 .pay-field textarea {
-  @apply w-full rounded-xl px-4 py-3 text-sm text-white outline-none
-         transition-all duration-200;
-  background: rgba(255,255,255,0.06);
-  border: 0.5px solid rgba(255,255,255,0.1);
+  @apply w-full rounded-xl px-4 py-3 text-sm text-gray-900 outline-none
+         transition-all duration-200 bg-gray-50 border border-gray-200;
 }
 .pay-field input:focus,
 .pay-field select:focus,
 .pay-field textarea:focus {
-  border-color: rgba(255,255,255,0.35);
-  background: rgba(255,255,255,0.09);
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+  border-color: #dc2626;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
 }
 .pay-field input.error {
-  border-color: rgba(220,38,38,0.6);
-  background: rgba(220,38,38,0.05);
+  border-color: #ef4444;
+  background: #fef2f2;
 }
 .pay-field input::placeholder,
 .pay-field textarea::placeholder {
-  @apply text-white/20;
+  @apply text-gray-400;
 }
 .pay-field select option {
-  background: #1a1a1a;
-  color: white;
-}
-.pay-field input::-webkit-calendar-picker-indicator {
-  filter: invert(1) opacity(0.4);
+  background: #ffffff;
+  color: #111827;
 }
 
 .pay-err {
-  @apply text-xs text-red-400;
+  @apply text-xs text-red-600 font-medium;
 }
 
 /* ── Time slots grid ── */
 .pay-time-grid {
-  @apply grid gap-2;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  @apply grid gap-2.5;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (min-width: 640px) {
+  .pay-time-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .pay-time-slot {
-  @apply py-2 px-3 rounded-lg text-xs font-semibold text-center
-         transition-all duration-200 cursor-pointer;
-  background: rgba(255,255,255,0.05);
-  border: 0.5px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.6);
+  @apply py-2.5 px-2 rounded-lg text-xs font-bold text-center
+         transition-all duration-200 cursor-pointer bg-white border border-gray-200 text-gray-600;
 }
 .pay-time-slot:hover {
-  background: rgba(255,255,255,0.1);
-  @apply text-white;
+  border-color: #dc2626;
+  @apply text-red-600;
 }
 .pay-time-slot.active {
-  background: rgba(220,38,38,0.15);
-  border-color: rgba(220,38,38,0.5);
-  @apply text-red-400;
+  background: #dc2626;
+  border-color: #dc2626;
+  @apply text-white;
 }
 
 /* ── Payment methods ── */
 .pay-methods {
-  @apply flex flex-col gap-3 mb-4;
+  @apply flex flex-col gap-3 mb-2;
 }
 .pay-method {
   @apply flex items-center gap-4 p-4 rounded-xl
-         cursor-pointer transition-all duration-200 w-full text-left;
-  background: rgba(255,255,255,0.04);
-  border: 0.5px solid rgba(255,255,255,0.08);
+         cursor-pointer transition-all duration-200 w-full text-left bg-white border-2 border-gray-100;
 }
 .pay-method:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.18);
+  border-color: rgba(0,0,0,0.1);
+  background: #f9fafb;
 }
 .pay-method.active {
   border-color: var(--mc);
-  background: color-mix(in srgb, var(--mc) 12%, transparent);
+  background: color-mix(in srgb, var(--mc) 5%, transparent);
 }
 .pay-method-logo {
   @apply text-2xl w-10 flex-shrink-0 text-center;
 }
 .pay-method-name {
-  @apply text-sm font-semibold text-white;
+  @apply text-sm font-bold text-gray-900;
 }
 .pay-method-desc {
-  @apply text-xs text-white/40 mt-0.5;
+  @apply text-xs text-gray-500 mt-0.5;
 }
 .pay-method-check {
   @apply ml-auto w-6 h-6 rounded-full flex items-center justify-center
          text-xs font-bold text-white flex-shrink-0;
-  background: rgba(34,197,94,0.8);
+  background: #22c55e; /* Green 500 */
 }
 
 /* ── Card fields (Visa/Mastercard) ── */
 .pay-card-fields {
-  @apply overflow-hidden pt-4 border-t mt-4;
-  border-color: rgba(255,255,255,0.07);
+  @apply overflow-hidden pt-5 border-t border-gray-100 mt-5;
 }
 .pay-secure-note {
-  @apply text-xs text-white/35 mt-2;
+  @apply text-xs text-gray-500 mt-3 flex items-center gap-2 bg-green-50 text-green-700 p-3 rounded-lg border border-green-100;
 }
 .pay-atm-note {
-  @apply mt-4 p-4 rounded-xl text-sm text-white/55 leading-relaxed;
-  background: rgba(255,255,255,0.03);
-  border: 0.5px solid rgba(255,255,255,0.07);
+  @apply mt-4 p-4 rounded-xl text-sm text-gray-600 leading-relaxed bg-blue-50 border border-blue-100;
 }
 
 /* ══════════════════════════════
@@ -182,171 +170,180 @@
 }
 
 .pay-summary-card {
-  @apply rounded-2xl p-6 sticky top-24;
-  background: rgba(255,255,255,0.04);
-  border: 0.5px solid rgba(var(--c), 0.2);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.06),
-              0 24px 48px rgba(0,0,0,0.3);
+  @apply rounded-2xl p-6 md:p-8 sticky top-24 bg-white border border-gray-200 shadow-xl;
 }
 
 .pay-summary-title {
-  @apply text-sm font-semibold text-white mb-5 uppercase tracking-widest;
+  @apply text-xs font-bold text-gray-400 mb-5 uppercase tracking-widest border-b border-gray-100 pb-4;
 }
 
 /* Plan row */
 .pay-summary-plan {
-  @apply flex items-start gap-3 mb-4 pb-4;
-  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  @apply flex items-start gap-3 mb-4 pb-4 border-b border-gray-100;
 }
 .pay-summary-plan-dot {
   @apply w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5;
   background: var(--c);
-  box-shadow: 0 0 8px var(--c);
 }
 .pay-summary-plan-name {
-  @apply text-sm font-bold text-white;
+  @apply text-base font-bold text-gray-900;
 }
 .pay-summary-plan-sub {
-  @apply text-xs text-white/45 mt-0.5;
+  @apply text-xs text-gray-500 mt-1;
 }
 .pay-summary-plan-detail {
-  @apply text-xs text-white/30 mt-1;
+  @apply text-[11px] font-medium text-gray-400 mt-1 uppercase tracking-wider;
 }
 .pay-summary-plan > strong {
-  @apply ml-auto text-sm font-bold text-white flex-shrink-0;
+  @apply ml-auto text-base font-bold text-gray-900 flex-shrink-0;
 }
 
 /* Rows */
 .pay-summary-row {
-  @apply flex justify-between items-center text-xs py-2;
-  color: rgba(255,255,255,0.5);
+  @apply flex justify-between items-center text-sm py-2 font-medium text-gray-600;
 }
-.pay-summary-row span:last-child { @apply text-white/70; }
+.pay-summary-row span:last-child { @apply text-gray-900 font-bold; }
 
 /* Datetime */
 .pay-summary-datetime {
-  @apply flex items-center gap-2 text-xs py-2 rounded-lg px-3 mt-2;
-  color: rgba(255,255,255,0.55);
-  background: rgba(255,255,255,0.04);
+  @apply flex items-center gap-2 text-xs font-bold py-3 rounded-lg px-3 mt-3 text-gray-700 bg-gray-50 border border-gray-100;
 }
 
 /* Car tags */
 .pay-summary-cars {
-  @apply flex flex-wrap gap-1.5 mt-3;
+  @apply flex flex-wrap gap-2 mt-4;
 }
 .pay-summary-car-tag {
-  @apply text-[10px] font-semibold px-2 py-1 rounded-md;
-  background: rgba(255,255,255,0.06);
-  border: 0.5px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.6);
+  @apply text-[10px] font-bold px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 border border-gray-200 uppercase tracking-wider;
 }
 
 .pay-summary-hr {
-  @apply my-4;
-  border-color: rgba(255,255,255,0.08);
+  @apply my-5 border-gray-200 border-dashed;
 }
 
 /* Total */
 .pay-summary-total {
-  @apply flex justify-between items-baseline mb-3;
+  @apply flex justify-between items-baseline mb-4;
 }
-.pay-summary-total span { @apply text-sm text-white/50; }
+.pay-summary-total span { @apply text-xs font-bold uppercase tracking-widest text-gray-500; }
 .pay-summary-total strong {
-  @apply text-xl font-bold;
-  color: var(--c);
+  @apply text-2xl font-black;
+  color: #dc2626;
 }
 
 .pay-summary-note {
-  @apply text-[11px] leading-relaxed mb-5;
-  color: rgba(255,255,255,0.3);
+  @apply text-[11px] leading-relaxed mb-6 text-gray-500 bg-gray-50 p-3 rounded-lg;
 }
 
 /* Submit button */
 .pay-submit {
-  @apply w-full py-4 rounded-xl text-sm font-bold tracking-widest
-         uppercase text-white transition-all duration-200
-         hover:brightness-110 hover:-translate-y-0.5
-         active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  @apply w-full py-4 rounded-xl text-xs font-bold tracking-[0.2em]
+         uppercase text-white transition-all duration-300
+         hover:bg-red-700 hover:-translate-y-1
+         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_10px_20px_rgba(220,38,38,0.2)];
 }
 
 .pay-terms {
-  @apply text-[10px] text-center mt-4 leading-relaxed;
-  color: rgba(255,255,255,0.25);
+  @apply text-[10px] text-center mt-5 leading-relaxed text-gray-400;
 }
 .pay-terms a {
-  @apply underline hover:text-white/60 transition-colors;
-  color: rgba(255,255,255,0.4);
+  @apply underline hover:text-gray-900 transition-colors font-medium text-gray-500;
 }
 
 /* ── Shared buttons ── */
 .pay-btn {
-  @apply inline-block px-6 py-3 rounded-xl text-sm font-bold
+  @apply inline-block px-6 py-3 rounded-xl text-[11px] font-bold
          tracking-widest uppercase text-center no-underline
-         transition-all duration-200;
+         transition-all duration-300;
 }
 .pay-btn.primary {
-  @apply bg-white text-black hover:bg-gray-100 hover:-translate-y-0.5;
+  @apply bg-red-600 text-white hover:bg-red-700 shadow-md;
 }
 .pay-btn.ghost {
-  @apply text-white hover:bg-white/10;
-  background: rgba(255,255,255,0.07);
-  border: 0.5px solid rgba(255,255,255,0.15);
+  @apply text-gray-700 hover:bg-gray-100 bg-gray-50 border border-gray-200;
+}
+
+/* ── QR Screen ── */
+.pay-qr-container {
+  @apply max-w-md mx-auto bg-white rounded-3xl p-8 text-center shadow-xl;
+  margin-top: 4rem;
+  border: 1px solid #e5e7eb;
+}
+.pay-qr-title {
+  @apply text-2xl font-bold mb-6;
+  letter-spacing: -0.02em;
+}
+.pay-qr-box {
+  @apply bg-gray-50 p-4 rounded-2xl mx-auto mb-6 flex justify-center items-center;
+  width: fit-content;
+  border: 1px solid #e5e7eb;
+}
+.pay-qr-image {
+  @apply w-64 h-64 object-contain;
+}
+.pay-qr-info {
+  @apply text-left bg-gray-50 p-4 rounded-xl mb-6 text-sm;
+  border: 1px solid #e5e7eb;
+}
+.pay-qr-info p {
+  @apply flex justify-between mb-2 last:mb-0;
+  color: #4b5563;
+}
+.pay-qr-info strong {
+  @apply text-gray-900 font-medium;
+}
+.pay-qr-note {
+  @apply text-sm text-gray-500 mb-8;
+}
+.pay-qr-confirm {
+  @apply w-full py-4;
 }
 
 /* ── Processing / Success / Error screens ── */
 .pay-processing,
 .pay-success {
   @apply min-h-screen flex flex-col items-center justify-center
-         text-center px-6 gap-4;
+         text-center px-6 gap-4 bg-gray-50;
 }
 .pay-spinner {
-  @apply w-12 h-12 rounded-full border-2 border-white/20 border-t-red-500 mb-4;
+  @apply w-12 h-12 rounded-full border-4 border-gray-200 border-t-red-600 mb-4;
 }
-.pay-processing h2 { @apply text-xl font-semibold text-white; }
-.pay-processing p  { @apply text-sm text-white/45; }
+.pay-processing h2 { @apply text-xl font-bold text-gray-900; }
+.pay-processing p  { @apply text-sm text-gray-500; }
 
 .pay-success-icon {
   @apply w-16 h-16 rounded-full flex items-center justify-center
-         text-2xl font-bold text-white mb-2;
-  background: rgba(34,197,94,0.15);
-  border: 1px solid rgba(34,197,94,0.3);
-  box-shadow: 0 0 0 6px rgba(34,197,94,0.08);
+         text-2xl font-bold text-white mb-2 shadow-lg;
+  background: #22c55e;
 }
 .pay-error-icon {
   @apply w-16 h-16 rounded-full flex items-center justify-center
-         text-2xl font-bold text-red-400 mb-2;
-  background: rgba(220,38,38,0.1);
-  border: 1px solid rgba(220,38,38,0.25);
+         text-2xl font-bold text-white mb-2 shadow-lg;
+  background: #ef4444;
 }
-.pay-success h1 { @apply text-2xl font-semibold text-white; }
-.pay-success p  { @apply text-sm text-white/50; }
-.pay-order-num  { @apply text-sm text-white/60; }
-.pay-order-num strong { @apply text-white font-mono; }
+.pay-success h1 { @apply text-2xl font-bold text-gray-900; }
+.pay-success p  { @apply text-sm text-gray-500; }
+.pay-order-num  { @apply text-sm text-gray-600; }
+.pay-order-num strong { @apply text-gray-900 font-bold; }
 
 .pay-success-box {
-  @apply flex flex-col gap-2 p-5 rounded-2xl w-full max-w-sm text-left;
-  background: rgba(255,255,255,0.04);
-  border: 0.5px solid rgba(255,255,255,0.09);
+  @apply flex flex-col gap-3 p-6 rounded-2xl w-full max-w-sm text-left bg-white border border-gray-200 shadow-sm mt-4 mb-4;
 }
 .pay-success-box > div {
-  @apply flex justify-between text-sm;
+  @apply flex justify-between text-sm border-b border-gray-50 pb-2;
 }
-.pay-success-box span  { @apply text-white/45; }
-.pay-success-box strong{ @apply text-white font-semibold; }
+.pay-success-box > div:last-child {
+  @apply border-0 pb-0;
+}
+.pay-success-box span  { @apply text-gray-500; }
+.pay-success-box strong{ @apply text-gray-900 font-bold; }
 
 .pay-success-note {
-  @apply text-sm text-white/40 max-w-sm leading-relaxed;
+  @apply text-[11px] text-gray-500 max-w-sm leading-relaxed mb-4;
 }
 .pay-success-btns {
-  @apply flex gap-3 mt-2;
+  @apply flex flex-col sm:flex-row gap-3 mt-4 w-full max-w-sm;
 }
-
-/* ── Mobile ── */
-@media (max-width: 640px) {
-  .pay-header { @apply pt-24 px-4 pb-6; }
-  .pay-layout  { @apply px-4 pb-16; }
-  .pay-card    { @apply p-5; }
-  .pay-time-grid { grid-template-columns: repeat(4, 1fr); }
+.pay-success-btns > * {
+  @apply flex-1;
 }

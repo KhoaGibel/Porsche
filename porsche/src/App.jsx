@@ -1,8 +1,7 @@
-import Lenis from 'lenis';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, lazy } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Loader, Environment } from '@react-three/drei';
-import { motion, useScroll, useTransform } from 'framer-motion'; 
+import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'; 
 import { useIsMobile } from './hooks/useIsMobile';
 import './App.css'; 
 
@@ -14,11 +13,15 @@ import useCarStore from './store/useCarStore';
 import HistorySection from './components/HistorySection/HistorySection';
 import PorscheChatbot from './components/ChatbotAI/PorscheChatbot.jsx';
 import HeroVideo from './components/HeroVideo/HeroVideo';
-import StatsSection from './components/StatsSection/StatsSection.jsx';
-import TrackMap from './components/TrackMap/TrackMap.jsx';
-import DnaCar from './components/DnaCar/DnaCar.jsx';
-import EngineSoundPlayer from './components/EngineSoundPlayer/EngineSoundPlayer.jsx';
 import Footer from './components/Footer/Footer.jsx';
+import CinematicPreloader from './components/CinematicPreloader/CinematicPreloader.jsx';
+
+// Tối ưu hóa: Lazy load các components không xuất hiện ở màn hình đầu tiên (Above the fold)
+const StatsSection = lazy(() => import('./components/StatsSection/StatsSection.jsx'));
+const TrackMap = lazy(() => import('./components/TrackMap/TrackMap.jsx'));
+const DnaCar = lazy(() => import('./components/DnaCar/DnaCar.jsx'));
+const EngineSoundPlayer = lazy(() => import('./components/EngineSoundPlayer/EngineSoundPlayer.jsx'));
+const PorscheHeritage = lazy(() => import('./components/PorscheHeritage/PorscheHeritage.jsx'));
 
 const CAR_LIST = [
   { id: 'GT3 RS',      label: 'GT3 RS'      },
@@ -26,10 +29,11 @@ const CAR_LIST = [
   { id: '911 TURBO S', label: '911 Turbo S' },
 ];
 
-const gt3rsImageUrl    = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/v1782715196/gt3rs-bg_vcobvv.jpg';
-const gt3ImageUrl = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/v1784492003/gt3_zomfy3.png';
-const turboSImageUrl ='https://res.cloudinary.com/dq8xgcqhk/image/upload/v1784492004/image_6_wvqqxb.png';
-const historyBgUrl     = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg';
+// Thêm cờ f_auto,q_auto để nhờ Cloudinary tự động nén dung lượng và đổi đuôi ảnh thành webp/avif siêu nhẹ
+const gt3rsImageUrl    = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg';
+const gt3ImageUrl = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png';
+const turboSImageUrl ='https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png';
+const historyBgUrl     = 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg';
 
 export default function App() {
   const isSidebarOpen = useCarStore((state) => state.isSidebarOpen);
@@ -52,11 +56,11 @@ export default function App() {
 
   const { scrollYProgress } = useScroll();
 
-  // Tạo hiệu ứng nội suy màu: Tối -> Trắng -> Tối
+  // Tạo hiệu ứng nội suy màu: Đen tuyền -> Xám than -> Đỏ đô siêu tối -> Đen tuyền
   const backgroundColor = useTransform(
     scrollYProgress,
-    [0, 0.25, 0.35, 0.65, 0.75, 1],
-    ['#080808', '#080808', '#ffffff', '#ffffff', '#080808', '#080808']
+    [0, 0.25, 0.5, 0.75, 1],
+    ['#000000', '#0a0a0a', '#1a0505', '#050505', '#000000']
   );
 
   const switchCar = (dir) => {
@@ -118,22 +122,6 @@ export default function App() {
 
   const customVideoCover = "https://images.unsplash.com/photo-1611821064430-0d40291d0f0f?q=80&w=2000&auto=format&fit=crop";
 
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-
-    return () => lenis.destroy(); 
-  }, []);
-
   return (
     // Bỏ màu nền ở thẻ bao ngoài cùng
     <div className="relative w-full min-h-screen overflow-x-clip">
@@ -163,6 +151,10 @@ export default function App() {
         />
       </div>
 
+      <Suspense fallback={<div className="w-full min-h-[100dvh] bg-transparent" />}>
+        <PorscheHeritage id="porsche-heritage" />
+      </Suspense>
+
       {/* SHOWROOM 3D */}
       <section
         id="3d-showroom"
@@ -179,6 +171,7 @@ export default function App() {
             dpr={isMobile ? [1, 1] : [1, 1.5]}
             performance={{ min: isMobile ? 0.3 : 0.5 }}
             style={{ width: '100%', height: '100%' }}
+            gl={{ powerPreference: "high-performance", antialias: true, stencil: false }}
           >
             <Suspense fallback={null}>
               <group position={[ slideDir === 'right' ? -3 : slideDir === 'left' ? 3 : 0, 0, 0 ]}>
@@ -190,12 +183,7 @@ export default function App() {
             <OrbitControls target={[0, 1, 0]} enableDamping dampingFactor={0.08} makeDefault minPolarAngle={0.2} maxPolarAngle={Math.PI / 2.2} minDistance={3} maxDistance={12} enablePan={false} enableZoom={false} />
           </Canvas>
 
-          <Loader
-            containerStyles={{ background: 'transparent', position: 'absolute', bottom: '4rem', left: '50%', transform: 'translateX(-50%)', width: '160px' }}
-            barStyles={{ background: '#dc2626', height: '1px' }}
-            dataStyles={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}
-            dataInterpolation={(p) => `Loading... ${Math.round(p)}%`}
-          />
+          <CinematicPreloader isSuspenseFallback={false} />
 
           <div className="absolute bottom-[5.5rem] left-1/2 -translate-x-1/2 text-center pointer-events-none z-20 font-['PorscheFont',sans-serif]">
             <p className="text-[11px] font-semibold tracking-[0.5em] text-white/40 uppercase mb-1 drop-shadow-md">PORSCHE</p>
@@ -253,21 +241,23 @@ export default function App() {
         <PorscheChatbot />
       </section>
       
-      <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-        <StatsSection carModel={selectedCar} />
-      </div>
+      <Suspense fallback={<div className="w-full min-h-[100dvh] bg-transparent" />}>
+        <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
+          <StatsSection carModel={selectedCar} />
+        </div>
 
-      <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-        <TrackMap carModel={selectedCar} />
-      </div>
+        <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
+          <TrackMap carModel={selectedCar} />
+        </div>
 
-      <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-        <EngineSoundPlayer carModel={selectedCar} />
-      </div>
+        <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
+          <EngineSoundPlayer carModel={selectedCar} />
+        </div>
 
-      <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
-        <DnaCar onView3D={jumpToCar} />
-      </div>
+        <div className="w-full min-h-[100dvh] relative flex flex-col justify-center bg-transparent">
+          <DnaCar carModel={selectedCar} onView3D={jumpToCar} />
+        </div>
+      </Suspense>
 
       <Footer/>
     </div>

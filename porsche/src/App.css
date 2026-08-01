@@ -1,0 +1,36 @@
+/* CSS override cho hiệu ứng Light Mode mượt mà */
+.theme-light,
+.theme-light * {
+  transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease;
+}
+
+.theme-light .text-white { color: #111111 !important; }
+.theme-light .text-white\/20 { color: rgba(0, 0, 0, 0.2) !important; }
+.theme-light .text-white\/30 { color: rgba(0, 0, 0, 0.3) !important; }
+.theme-light .text-white\/35 { color: rgba(0, 0, 0, 0.35) !important; }
+.theme-light .text-white\/40 { color: rgba(0, 0, 0, 0.4) !important; }
+.theme-light .text-white\/50 { color: rgba(0, 0, 0, 0.5) !important; }
+.theme-light .text-white\/60 { color: rgba(0, 0, 0, 0.6) !important; }
+
+.theme-light .border-white\/5 { border-color: rgba(0, 0, 0, 0.1) !important; }
+.theme-light .border-white\/10 { border-color: rgba(0, 0, 0, 0.15) !important; }
+.theme-light .border-white\/20 { border-color: rgba(0, 0, 0, 0.2) !important; }
+
+.theme-light .bg-white\/5 { background-color: rgba(0, 0, 0, 0.03) !important; }
+.theme-light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.06) !important; }
+.theme-light .bg-white\/20 { background-color: rgba(0, 0, 0, 0.1) !important; }
+.theme-light .bg-white\/30 { background-color: rgba(0, 0, 0, 0.15) !important; }
+
+.theme-light .bg-\[\#0a0a0a\] { background-color: #f5f5f7 !important; }
+.theme-light .bg-\[\#111\] { background-color: #ffffff !important; }
+.theme-light .bg-black\/30 { background-color: rgba(0, 0, 0, 0.05) !important; }
+
+/* Giữ cho radar chart và graphic SVG hiển thị đẹp trên nền sáng */
+.theme-light .custom-radar-chart .recharts-polar-grid-concentric-polygon,
+.theme-light .custom-radar-chart .recharts-polar-grid-angle-line {
+  stroke: rgba(0,0,0,0.25) !important;
+}
+
+.theme-light .custom-radar-chart text {
+  fill: rgba(0,0,0,0.6) !important;
+}

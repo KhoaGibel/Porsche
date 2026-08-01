@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Lenis from 'lenis';
 
 import { userAPI } from '../../services/api';
 import { PLANS, INSURANCE, SHOWROOMS, TIME_SLOTS, fmt } from '../../data/testDrivePlans';
 import useCarStore from '../../store/useCarStore';
+import InteractiveCalendar from '../../components/TestDrive/InteractiveCalendar';
+import ShowroomMap from '../../components/TestDrive/ShowroomMap';
 
 const STEPS = ['Chọn gói', 'Bảo hiểm', 'Đặt lịch', 'Xác nhận'];
 
@@ -19,6 +20,7 @@ const FAQ_LIST = [
 export default function TestDriveShop() {
   const user = useCarStore((state) => state.user ?? null); 
   const isLoggedIn = !!user;
+  const navigate = useNavigate();
 
   // -- STATES --
   const [step, setStep] = useState(0);
@@ -31,26 +33,6 @@ export default function TestDriveShop() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [showLoginGate, setShowLoginGate] = useState(false);
-
-  // -- LENIS SMOOTH SCROLL --
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smooth: true,
-      smoothTouch: false,
-    });
-    
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-    
-    return () => {
-      lenis.destroy();
-    };
-  }, []);
 
   // -- CALCULATIONS --
   const plan = PLANS.find((p) => p.id === selectedPlan);
@@ -342,59 +324,83 @@ export default function TestDriveShop() {
           </div>
         )}
 
-        {/* BƯỚC 2: ĐẶT LỊCH */}
+        {/* BƯỚC 2: ĐẶT LỊCH (NÂNG CẤP) */}
         {step === 2 && (
-          <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-xl font-bold mb-6 text-gray-900">Chi tiết Lịch hẹn</h2>
+          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-xl font-bold mb-2 text-gray-900 text-center md:text-left">Chi tiết Lịch hẹn</h2>
+            <p className="text-sm text-gray-500 mb-8 text-center md:text-left">Vui lòng chọn ngày, giờ và Trung tâm Porsche để trải nghiệm.</p>
             
-            <div className="space-y-5 bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm mb-6">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Ngày lái thử</label>
-                <input 
-                  type="date" min={minDate} value={date} onChange={e => setDate(e.target.value)} 
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg p-3 text-sm outline-none focus:border-red-500 focus:bg-white transition-colors" 
+            <div className="flex flex-col lg:flex-row gap-6 mb-8">
+              
+              {/* CỘT TRÁI: LỊCH & GIỜ */}
+              <div className="w-full lg:w-5/12 flex flex-col gap-6">
+                <InteractiveCalendar 
+                  selectedDate={date} 
+                  onSelectDate={setDate} 
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Giờ bắt đầu (Bắt buộc)</label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                  {TIME_SLOTS.map(t => (
-                    <button 
-                      key={t} onClick={() => setTime(t)}
-                      className={`py-2.5 rounded-md border text-xs font-bold transition-colors
-                        ${time === t ? 'bg-red-600 border-red-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900'}`}
-                    >
-                      {t}
-                    </button>
-                  ))}
+                
+                {/* Chọn giờ */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center justify-between">
+                    Giờ hẹn <span className="text-gray-400 font-normal lowercase">(Bắt buộc)</span>
+                  </h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                    {TIME_SLOTS.map(t => (
+                      <button 
+                        key={t} onClick={() => setTime(t)}
+                        className={`py-2 rounded-lg border text-xs font-bold transition-all duration-200
+                          ${time === t ? 'bg-red-600 border-red-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900'}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Showroom & Địa điểm</label>
-                <select 
-                  value={showroom} onChange={e => setShowroom(e.target.value)} 
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg p-3 text-sm outline-none focus:border-red-500 focus:bg-white transition-colors appearance-none"
-                >
-                  {SHOWROOMS.map(sr => (
-                    <option key={sr} value={sr}>{sr}</option>
-                  ))}
-                </select>
+              {/* CỘT PHẢI: BẢN ĐỒ & GHI CHÚ */}
+              <div className="w-full lg:w-7/12 flex flex-col gap-6">
+                <div className="flex-1">
+                  <ShowroomMap 
+                    selectedShowroom={showroom} 
+                    onSelectShowroom={setShowroom} 
+                  />
+                </div>
+                
+                {/* Ghi chú */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 flex items-center justify-between">
+                    Ghi chú <span className="text-gray-400 font-normal lowercase">(Tùy chọn)</span>
+                  </h3>
+                  <textarea 
+                    rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="Yêu cầu đặc biệt hoặc mẫu xe ưu tiên..."
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg p-3 text-sm outline-none focus:border-red-500 focus:bg-white transition-colors resize-none placeholder:text-gray-400" 
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2">Ghi chú <span className="text-gray-400 lowercase normal-case">(Tùy chọn)</span></label>
-                <textarea 
-                  rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="Mẫu xe ưu tiên..."
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg p-3 text-sm outline-none focus:border-red-500 focus:bg-white transition-colors resize-none" 
-                />
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 border-t border-gray-200 pt-6">
               <button onClick={() => setStep(1)} className="px-6 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold tracking-widest text-xs uppercase transition-colors">Quay lại</button>
-              <button onClick={() => setStep(3)} disabled={!date || !time} className="px-8 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold tracking-widest text-xs uppercase transition-colors">Tới Thanh toán →</button>
+              <button 
+                onClick={() => {
+                  navigate('/payment', {
+                    state: {
+                      planId: selectedPlan,
+                      insuranceId: selectedIns,
+                      date,
+                      time,
+                      showroom,
+                      note
+                    }
+                  });
+                }} 
+                disabled={!date || !time} 
+                className="px-8 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold tracking-widest text-xs uppercase transition-colors"
+              >
+                Tới Thanh toán →
+              </button>
             </div>
           </div>
         )}

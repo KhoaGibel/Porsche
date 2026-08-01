@@ -18,7 +18,7 @@ Nhiệm vụ của bạn:
 export const sendMessageToGemini = async (userMessage, chatHistory = []) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash", // Dùng bản flash cho tốc độ phản hồi chớp nhoáng
+      model: "gemini-1.5-flash", // Dùng bản flash 1.5 ổn định
       systemInstruction: SYSTEM_PROMPT,
     });
 

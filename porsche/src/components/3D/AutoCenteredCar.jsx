@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -16,53 +16,73 @@ export const MODEL_REGISTRY = {
   },
   'GT3': {
     glbPath: '/models/gt3_opt.glb',
-    scale: 110,                 
-    rotationY: -Math.PI / 2,    
-    positionOffset: [0, 0, 0],  
+    scale: 110,
+    rotationY: -Math.PI / 2,
+    positionOffset: [0, 0, 0],
     paintableMaterials: ['paint'],
     accentMaterials:    ['hood', 'wing'],
   },
   '911 TURBO S': {
     glbPath: '/models/turbos_opt.glb',
-    scale: 150,                   
+    scale: 150,
     rotationY: 0,
-    positionOffset: [0, 0, 0],  
+    positionOffset: [0, 0, 0],
     paintableMaterials: ['palettematerial005', 'regiona_1'],
     accentMaterials:    [],
   },
 };
 
+const DEFAULT_CAR = 'GT3 RS';
+
+const cloneCache = new Map();
+const bboxCache = new Map();
+
 export default function AutoCenteredCar() {
-  const activeCar   = useCarStore((state) => state.activeCar) ?? 'GT3 RS';
+  const activeCar   = useCarStore((state) => state.activeCar) ?? DEFAULT_CAR;
   const carColor    = useCarStore((state) => state.carColor);
-  const setCarColor = useCarStore((state) => state.setCarColor); 
+  const setCarColor = useCarStore((state) => state.setCarColor);
   const invalidate  = useThree((state) => state.invalidate);
 
-  const modelInfo = MODEL_REGISTRY[activeCar] ?? MODEL_REGISTRY['GT3 RS'];
-  
-  // ── Bước 0: CLONE SCENE ──
-  const { scene: originalScene } = useGLTF(modelInfo.glbPath);
-  const scene = useMemo(() => originalScene.clone(), [originalScene]);
+  const modelInfo = MODEL_REGISTRY[activeCar] ?? MODEL_REGISTRY[DEFAULT_CAR];
 
-  // ── MỚI: TỰ ĐỘNG XÓA MÀU KHI CHUYỂN XE KHÁC ──
-  useEffect(() => {
-    if (setCarColor) {
-      setCarColor(null);
+  const { scene: originalScene } = useGLTF(modelInfo.glbPath);
+
+  // ── Cache clone theo từng xe — tránh clone lại + tính lại
+  //    bounding box mỗi lần quay lại xe đã xem trước đó ──
+  const scene = useMemo(() => {
+    if (cloneCache.has(activeCar)) {
+      return cloneCache.get(activeCar);
     }
+    const cloned = originalScene.clone();
+    cloneCache.set(activeCar, cloned);
+    return cloned;
+  }, [originalScene, activeCar]);
+
+  // ── Tự động xoá màu khi chuyển xe khác ──
+  useEffect(() => {
+    if (setCarColor) setCarColor(null);
   }, [activeCar, setCarColor]);
 
-  // ── Bước 1: Tính toán tâm hình học ──
+  // ── Tính tâm hình học — cache theo activeCar, không tính lại
+  //    khi quay lại xe cũ (scene đã cache nên box cũng không đổi) ──
   const { center, minY } = useMemo(() => {
+    if (bboxCache.has(activeCar)) {
+      return bboxCache.get(activeCar);
+    }
     if (!scene) return { center: new THREE.Vector3(), minY: 0 };
+
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
     scene.scale.set(1, 1, 1);
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
-    return { center: box.getCenter(new THREE.Vector3()), minY: box.min.y };
-  }, [scene]);
+    const result = { center: box.getCenter(new THREE.Vector3()), minY: box.min.y };
 
-  // ── Bước 2: Khử lỗi xuyên thấu vật liệu bề mặt ──
+    bboxCache.set(activeCar, result);
+    return result;
+  }, [scene, activeCar]);
+
+  // ── Khử lỗi xuyên thấu vật liệu bề mặt ──
   useEffect(() => {
     if (!scene) return;
     scene.traverse((child) => {
@@ -85,7 +105,7 @@ export default function AutoCenteredCar() {
     invalidate();
   }, [scene, invalidate]);
 
-  // ── Bước 3: Đổi màu sơn vỏ xe (Đã tối ưu Memory & Phục hồi màu gốc) ──
+  // ── Đổi màu sơn vỏ xe ──
   useEffect(() => {
     if (!scene) return;
 
@@ -104,10 +124,10 @@ export default function AutoCenteredCar() {
     const isPaintable = (child) => {
       const meshName = (child.name || '').toLowerCase();
       const matName  = (child.material?.name || '').toLowerCase();
-      
+
       const blackList = [
         'tire', 'wheel', 'rim', 'brake', 'caliper', 'disc', 'alloy', 'rubber',
-        'carbon', 'plastic', 'grill', 'mesh', 'black_matte', 
+        'carbon', 'plastic', 'grill', 'mesh', 'black_matte',
         'glass', 'window', 'mirror', 'light', 'lamp', 'lens',
         'logo', 'badge', 'interior', 'seat', 'engine', 'exhaust'
       ];
@@ -130,26 +150,23 @@ export default function AutoCenteredCar() {
     scene.traverse((child) => {
       if (!child.isMesh || !child.material) return;
 
-      // 🎯 1. BẢO TỒN: Lưu lại material gốc (từ file 3D) vào userData
       if (!child.userData.originalMaterial) {
         child.userData.originalMaterial = child.material;
       }
 
-      // 🎯 2. RESET: Nếu chưa chọn màu (carColor = null), phục hồi lại nguyên trạng material gốc
       if (!carColor) {
         if (child.material !== child.userData.originalMaterial) {
-          child.material.dispose(); 
-          child.material = child.userData.originalMaterial; 
+          child.material.dispose();
+          child.material = child.userData.originalMaterial;
         }
         return;
       }
 
-      
       if (isPaintable(child)) {
         if (child.material !== child.userData.originalMaterial) {
-          child.material.dispose(); 
+          child.material.dispose();
         }
-        
+
         const m = child.userData.originalMaterial.clone();
         m.map                = null;
         m.roughnessMap       = null;
@@ -162,14 +179,14 @@ export default function AutoCenteredCar() {
         m.clearcoatRoughness = isMetallic ? 0.12 : 0.04;
         m.envMapIntensity    = 3.0;
         m.needsUpdate        = true;
-        
+
         child.material = m;
 
       } else if (isAccent(child)) {
         if (child.material !== child.userData.originalMaterial) {
           child.material.dispose();
         }
-        
+
         const m = child.userData.originalMaterial.clone();
         m.map = null;
         if (isBlackCar) {
@@ -177,8 +194,8 @@ export default function AutoCenteredCar() {
         } else {
           m.color.set('#1a1a1a'); m.roughness = 0.6; m.metalness = 0.3;
         }
-        m.needsUpdate  = true;
-        
+        m.needsUpdate = true;
+
         child.material = m;
       }
     });
@@ -186,21 +203,29 @@ export default function AutoCenteredCar() {
     invalidate();
   }, [scene, carColor, activeCar, invalidate, modelInfo]);
 
-  // ── Bước 4: Khung bọc khai báo ──
   const offset = modelInfo.positionOffset || [0, 0, 0];
 
   return (
     <group scale={modelInfo.scale || 1} position={offset}>
       <group rotation={[0, modelInfo.rotationY || 0, 0]}>
-        <primitive 
-          object={scene} 
-          position={[-center.x, -minY, -center.z]} 
+        <primitive
+          object={scene}
+          position={[-center.x, -minY, -center.z]}
         />
       </group>
     </group>
   );
 }
 
-Object.values(MODEL_REGISTRY).forEach((info) => {
-  useGLTF.preload(info.glbPath);
-});
+
+useGLTF.preload(MODEL_REGISTRY[DEFAULT_CAR].glbPath);
+
+if (typeof window !== 'undefined') {
+  const scheduleIdle = window.requestIdleCallback ?? ((cb) => setTimeout(cb, 1500));
+  scheduleIdle(() => {
+    Object.entries(MODEL_REGISTRY).forEach(([name, info]) => {
+      if (name === DEFAULT_CAR) return; // đã preload ở trên rồi
+      useGLTF.preload(info.glbPath);
+    });
+  });
+}
