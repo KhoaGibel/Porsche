@@ -4,7 +4,7 @@ import {
   getProfile, updateProfile,
   saveConfig, deleteConfig,
   bookTestDrive, getTestDrives,
-} from '../controllers/userController.js';
+} from '../controllers/UserController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = Router();
