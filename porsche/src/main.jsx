@@ -39,12 +39,16 @@ function GlobalScroll() {
       smoothWheel: true,
       smoothTouch: false,
     });
+    window.lenis = lenis;
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
-    return () => lenis.destroy();
+    return () => {
+      lenis.destroy();
+      delete window.lenis;
+    }
   }, []);
 
   return null;

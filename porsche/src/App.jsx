@@ -102,7 +102,8 @@ export default function App() {
   const jumpToCar = (carId) => {
     const targetIndex = CAR_LIST.findIndex(c => c.id === carId);
     if (targetIndex === -1 || targetIndex === carIndex || isAnimating) {
-      document.getElementById('3d-showroom')?.scrollIntoView({ behavior: 'smooth' });
+      if (window.lenis) window.lenis.scrollTo('#3d-showroom');
+      else document.getElementById('3d-showroom')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -110,7 +111,8 @@ export default function App() {
     setSlideDir(dir);
     setIsAnimating(true);
     
-    document.getElementById('3d-showroom')?.scrollIntoView({ behavior: 'smooth' });
+    if (window.lenis) window.lenis.scrollTo('#3d-showroom');
+    else document.getElementById('3d-showroom')?.scrollIntoView({ behavior: 'smooth' });
 
     setTimeout(() => {
       setCarIndex(targetIndex);
@@ -123,7 +125,12 @@ export default function App() {
   
   const handleNavbarCarSelect = (carId) => {
     const targetIndex = CAR_LIST.findIndex(c => c.id === carId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     if (targetIndex === -1 || targetIndex === carIndex || isAnimating) return;
 
