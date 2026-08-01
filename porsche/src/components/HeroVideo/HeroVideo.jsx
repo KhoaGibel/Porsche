@@ -162,12 +162,12 @@ export default function HeroVideo({ carModel = 'GT3 RS' }) {
           </AnimatePresence>
         </h1>
 
-        {/* Khẩu hiệu dưới */}
+        {/* Khẩu hiệu dưới - Bỏ opacity: 0 và delay để fix điểm LCP của Lighthouse */}
         <motion.p 
           key={`tagline-${carModel}`}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0.4, y: 10 }}
           animate={{ opacity: 0.4, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.8 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-sm md:text-base font-light tracking-[0.3em] uppercase text-white/40 max-w-[600px] leading-relaxed"
         >
           {data.tagline}
