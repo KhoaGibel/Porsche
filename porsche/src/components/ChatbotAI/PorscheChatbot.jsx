@@ -32,10 +32,12 @@ export default function PorscheChatbot() {
     loadChatHistory();
   }, [user]);
 
-  // Cuộn xuống tin nhắn mới nhất
+  // Cuộn xuống tin nhắn mới nhất (chỉ cuộn khi cửa sổ chat đang mở)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [messages, isOpen]);
 
   // 2. HÀM XỬ LÝ KHI NGƯỜI DÙNG BẤM GỬI
   const handleSendMessage = async (e) => {
