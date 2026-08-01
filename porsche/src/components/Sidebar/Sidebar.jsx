@@ -44,6 +44,7 @@ export default function Sidebar() {
         <div className={`px-8 ${isMobile ? 'pt-4' : 'pt-28'} pb-6 border-b shrink-0 border-gray-200`}>
           <button
             onClick={toggleSidebar}
+            aria-label="Đóng bảng cấu hình xe"
             className={`absolute ${isMobile ? 'top-4 right-6' : 'top-28 right-8'} p-2 rounded-full transition-colors hover:bg-gray-100 text-gray-500 hover:text-gray-900`}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
