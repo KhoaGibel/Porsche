@@ -151,11 +151,13 @@ export default function App() {
       </div>
 
       <div className="w-full h-[100dvh] relative overflow-hidden flex flex-col bg-transparent">
-        <HistorySection 
-          id="history-section" 
-          bgImage={historyBgUrl} 
-          videoThumbnail={customVideoCover}
-        />
+        <InViewWrapper margin="400px">
+          <HistorySection 
+            id="history-section" 
+            bgImage={historyBgUrl} 
+            videoThumbnail={customVideoCover}
+          />
+        </InViewWrapper>
       </div>
 
       <Suspense fallback={<div className="w-full min-h-[100dvh] bg-transparent" />}>
