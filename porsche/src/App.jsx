@@ -1,6 +1,5 @@
 import { Suspense, useState, useEffect, lazy } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Loader, Environment } from '@react-three/drei';
+import { Loader } from '@react-three/drei';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'; 
 import { useIsMobile } from './hooks/useIsMobile';
 import './App.css'; 
@@ -22,6 +21,7 @@ const TrackMap = lazy(() => import('./components/TrackMap/TrackMap.jsx'));
 const DnaCar = lazy(() => import('./components/DnaCar/DnaCar.jsx'));
 const EngineSoundPlayer = lazy(() => import('./components/EngineSoundPlayer/EngineSoundPlayer.jsx'));
 const PorscheHeritage = lazy(() => import('./components/PorscheHeritage/PorscheHeritage.jsx'));
+const ShowroomCanvas = lazy(() => import('./components/3D/ShowroomCanvas.jsx'));
 
 const CAR_LIST = [
   { id: 'GT3 RS',      label: 'GT3 RS'      },
@@ -165,23 +165,9 @@ export default function App() {
             ${!isMobile && isSidebarOpen ? 'md:w-[calc(100%-24rem)]' : ''}`}
           style={{ touchAction: 'pan-y' }}
         >
-          <Canvas
-            frameloop="demand"
-            camera={{ position: [5, 2.5, 7], fov: 42 }}
-            dpr={isMobile ? [1, 1] : [1, 1.5]}
-            performance={{ min: isMobile ? 0.3 : 0.5 }}
-            style={{ width: '100%', height: '100%' }}
-            gl={{ powerPreference: "high-performance", antialias: true, stencil: false }}
-          >
-            <Suspense fallback={null}>
-              <group position={[ slideDir === 'right' ? -3 : slideDir === 'left' ? 3 : 0, 0, 0 ]}>
-                <AutoCenteredCar scale={1} />
-              </group>
-              <Environment files="https://res.cloudinary.com/dq8xgcqhk/raw/upload/v1783567347/grasslands_sunset_1k_lcveuv.hdr" background />
-              <ContactShadows resolution={isMobile ? 256 : 512} frames={1} scale={14} blur={3} opacity={0.85} far={10} color="#000000" />
-            </Suspense>
-            <OrbitControls target={[0, 1, 0]} enableDamping dampingFactor={0.08} makeDefault minPolarAngle={0.2} maxPolarAngle={Math.PI / 2.2} minDistance={3} maxDistance={12} enablePan={false} enableZoom={false} />
-          </Canvas>
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-black text-white/50">Đang tải Showroom 3D...</div>}>
+            <ShowroomCanvas slideDir={slideDir} />
+          </Suspense>
 
           <CinematicPreloader isSuspenseFallback={false} />
 
