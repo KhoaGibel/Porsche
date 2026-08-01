@@ -3,8 +3,8 @@ export default function Footer() {
   return (
     <footer className="w-full font-sans">
       
-      {/* ── PHẦN TRÊN: NỀN ĐEN NHÁM ĐỒNG BỘ ── */}
-      <div className="bg-[#060606] pt-[80px] pb-[60px] px-[5%]">
+      {/* ── PHẦN TRÊN: NỀN ĐEN TUYỆT ĐỐI ĐỒNG BỘ ── */}
+      <div className="bg-black pt-[80px] pb-[60px] px-[5%]">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-start flex-wrap gap-10">
           
           {/* Cột trái: Thông tin liên lạc */}
