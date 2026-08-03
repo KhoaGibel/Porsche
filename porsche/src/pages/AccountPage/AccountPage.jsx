@@ -120,6 +120,15 @@ export default function AccountPage() {
             >
               Bảo mật & Mật khẩu
             </button>
+            {user?.role === 'admin' && (
+              <button 
+                className="account-tab"
+                style={{ color: '#ef4444', fontWeight: 'bold' }}
+                onClick={() => navigate('/admin')}
+              >
+                Trang Quản Trị (Admin)
+              </button>
+            )}
           </div>
         </div>
 

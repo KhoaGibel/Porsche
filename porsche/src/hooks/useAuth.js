@@ -17,8 +17,24 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
-useEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // KIỂM TRA FAKE ADMIN TỪ LOCAL STORAGE
+      if (localStorage.getItem('isFakeAdmin') === 'true') {
+        const adminData = {
+          id: 'admin-id-123',
+          uid: 'admin-id-123',
+          email: 'admin@porsche.local',
+          fullName: 'Super Admin',
+          role: 'admin',
+          displayName: 'Super Admin'
+        };
+        setUser(adminData);
+        useCarStore.getState().setUser(adminData);
+        setLoading(false);
+        return;
+      }
+
       setUser(firebaseUser);
 
       if (firebaseUser) {
@@ -111,8 +127,9 @@ useEffect(() => {
           fullName: 'Super Admin',
           role: 'admin'
         };
-        setUser({ uid: 'admin-id-123', email: 'admin@porsche.local', displayName: 'Super Admin' });
+        setUser(adminData);
         useCarStore.getState().setUser(adminData);
+        localStorage.setItem('isFakeAdmin', 'true');
         return { success: true };
       }
 
@@ -151,7 +168,10 @@ useEffect(() => {
     }
   };
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    localStorage.removeItem('isFakeAdmin');
+    signOut(auth);
+  };
 
   return {
     user, loading, error, clearError,
