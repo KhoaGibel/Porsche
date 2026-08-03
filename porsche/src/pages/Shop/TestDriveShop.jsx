@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { userAPI } from '../../services/api';
 import { PLANS, INSURANCE, SHOWROOMS, TIME_SLOTS, fmt } from '../../data/testDrivePlans';
 import useCarStore from '../../store/useCarStore';
+import { useAuth } from '../../hooks/useAuth';
 import InteractiveCalendar from '../../components/TestDrive/InteractiveCalendar';
 import ShowroomMap from '../../components/TestDrive/ShowroomMap';
 
@@ -18,8 +19,9 @@ const FAQ_LIST = [
 ];
 
 export default function TestDriveShop() {
-  const user = useCarStore((state) => state.user ?? null); 
-  const isLoggedIn = !!user;
+  const { user: authUser } = useAuth();
+  const storeUser = useCarStore((state) => state.user ?? null); 
+  const isLoggedIn = !!authUser || !!storeUser;
   const navigate = useNavigate();
 
   // -- STATES --

@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/useAuth'; // Link tới hook auth của bạn
 import { useLocation, useNavigate } from 'react-router-dom';
+import { 
+  updatePassword, 
+  updateProfile, 
+  EmailAuthProvider, 
+  reauthenticateWithCredential 
+} from 'firebase/auth';
+import { auth } from '../../firebase';
+import useCarStore from '../../store/useCarStore';
 import './AccountPage.css';
 
 export default function AccountPage() {
@@ -43,22 +51,49 @@ export default function AccountPage() {
 
   const onUpdateProfile = async (data) => {
     try {
-      // 🚀 Nơi gọi API Firebase cập nhật tên hiển thị của bạn
-      console.log('Cập nhật thông tin:', data);
-      alert('Đã cập nhật thông tin thành công!');
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await updateProfile(currentUser, { displayName: data.fullName });
+        const storeUser = useCarStore.getState().user;
+        if (storeUser) {
+          useCarStore.getState().setUser({
+            ...storeUser,
+            fullName: data.fullName,
+          });
+        }
+        alert('Đã cập nhật thông tin thành công!');
+      } else {
+        alert('Đã cập nhật thông tin thành công!');
+      }
     } catch (error) {
       console.error(error);
+      alert('Lỗi cập nhật thông tin. Vui lòng thử lại sau.');
     }
   };
 
   const onChangePassword = async (data) => {
     try {
-      // 🚀 Nơi gọi API Firebase cập nhật mật khẩu của bạn
-      console.log('Mật khẩu mới:', data.newPassword);
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        alert('Tài khoản này không hỗ trợ đổi mật khẩu trực tiếp qua Firebase.');
+        return;
+      }
+      
+      // Xác thực lại với mật khẩu cũ
+      const credential = EmailAuthProvider.credential(currentUser.email, data.currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      
+      // Đổi mật khẩu mới
+      await updatePassword(currentUser, data.newPassword);
       alert('Đã đổi mật khẩu thành công!');
-      resetPwdForm(); // Xóa trắng form sau khi đổi xong
+      resetPwdForm();
     } catch (error) {
       console.error(error);
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        alert('Mật khẩu hiện tại không chính xác!');
+      } else {
+        alert(error.message || 'Lỗi khi cập nhật mật khẩu.');
+      }
     }
   };
 

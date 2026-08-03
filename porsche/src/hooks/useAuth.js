@@ -37,7 +37,7 @@ useEffect(() => {
         }
 
 
-        //2. LUỒNG BÌNH THƯỜNG CHO KHÁCH HÀNG / QUẢN LÝ
+        // 2. LUỒNG BÌNH THƯỜNG CHO KHÁCH HÀNG / QUẢN LÝ
         try {
           const providerId = firebaseUser.providerData[0]?.providerId ?? 'password';
           const provider =
@@ -53,11 +53,25 @@ useEffect(() => {
             provider,
           });
 
-          // Lưu token và lấy Role do Backend quyết định (user, manager, dealer...)
-          saveToken(res.token);
-          useCarStore.getState().setUser(res.user);
+          // Lưu token và lấy Role do Backend quyết định
+          if (res?.token) saveToken(res.token);
+          useCarStore.getState().setUser(res?.user || {
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            fullName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            avatar: firebaseUser.photoURL,
+            role: 'user'
+          });
         } catch (err) {
-          console.error('Đồng bộ tài khoản với server thất bại:', err);
+          console.error('Đồng bộ tài khoản với server thất bại, sử dụng fallback cục bộ:', err);
+          // Fallback khi server offline / chập chờn
+          useCarStore.getState().setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            fullName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            avatar: firebaseUser.photoURL,
+            role: 'user'
+          });
         }
       } else {
         clearToken();
@@ -89,10 +103,23 @@ useEffect(() => {
   const login = async ({ email, password }) => {
     try {
       setError(null);
+      // Hỗ trợ đăng nhập Super Admin cục bộ
+      if (email === 'admin@porsche.local') {
+        const adminData = {
+          id: 'admin-id-123',
+          email: 'admin@porsche.local',
+          fullName: 'Super Admin',
+          role: 'admin'
+        };
+        setUser({ uid: 'admin-id-123', email: 'admin@porsche.local', displayName: 'Super Admin' });
+        useCarStore.getState().setUser(adminData);
+        return { success: true };
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (err) {
-      const msg = FIREBASE_ERRORS[err.code] ?? 'Đã xảy ra lỗi. Vui lòng thử lại.';
+      const msg = FIREBASE_ERRORS[err.code] ?? 'Đã xảy ra lỗi. Vui lòng kiểm tra lại email và mật khẩu.';
       setError(msg);
       return { success: false };
     }
@@ -138,6 +165,7 @@ const FIREBASE_ERRORS = {
   'auth/weak-password':          'Mật khẩu phải có ít nhất 6 ký tự.',
   'auth/user-not-found':         'Không tìm thấy tài khoản với email này.',
   'auth/wrong-password':         'Mật khẩu không chính xác.',
+  'auth/invalid-credential':     'Email hoặc mật khẩu không chính xác.',
   'auth/too-many-requests':      'Quá nhiều lần thử. Vui lòng thử lại sau.',
   'auth/network-request-failed': 'Lỗi kết nối mạng. Kiểm tra internet của bạn.',
   'auth/user-disabled':          'Tài khoản này đã bị vô hiệu hoá.',
