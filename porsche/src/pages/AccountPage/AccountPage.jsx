@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../firebase';
 import useCarStore from '../../store/useCarStore';
+import { paymentAPI } from '../../services/api';
 import './AccountPage.css';
 
 export default function AccountPage() {
@@ -48,6 +49,26 @@ export default function AccountPage() {
   useEffect(() => {
     if (!user) navigate('/login');
   }, [user, navigate]);
+
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      const fetchOrders = async () => {
+        setLoadingOrders(true);
+        try {
+          const data = await paymentAPI.getMyOrders();
+          setOrders(data.orders || []);
+        } catch (error) {
+          console.error("Lỗi lấy đơn hàng:", error);
+        } finally {
+          setLoadingOrders(false);
+        }
+      };
+      fetchOrders();
+    }
+  }, [activeTab]);
 
   const onUpdateProfile = async (data) => {
     try {
@@ -119,6 +140,12 @@ export default function AccountPage() {
               onClick={() => setActiveTab('password')}
             >
               Bảo mật & Mật khẩu
+            </button>
+            <button 
+              className={`account-tab ${activeTab === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('orders')}
+            >
+              Lịch sử đơn hàng
             </button>
             {user?.role === 'admin' && (
               <button 
@@ -213,6 +240,37 @@ export default function AccountPage() {
                 {isPwdSubmitting ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
               </button>
             </form>
+          )}
+
+          {/* ── TAB: LỊCH SỬ ĐƠN HÀNG ── */}
+          {activeTab === 'orders' && (
+            <div className="account-orders">
+              <h2 className="text-xl font-bold mb-4 text-white">Lịch sử Đơn hàng</h2>
+              {loadingOrders ? (
+                <p className="text-gray-400">Đang tải...</p>
+              ) : orders.length === 0 ? (
+                <p className="text-gray-400">Bạn chưa có đơn hàng nào.</p>
+              ) : (
+                <div className="orders-list flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                  {orders.map(order => (
+                    <div key={order.id} className="order-item bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col gap-2">
+                      <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+                        <span className="font-bold text-white text-lg">Mã Đơn: #{order.order_number}</span>
+                        <span className={`text-sm px-3 py-1 rounded-full font-semibold capitalize ${order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                          {order.status === 'paid' ? 'Đã thanh toán' : (order.status === 'pending_payment' || order.status === 'awaiting_cash') ? 'Chờ thanh toán' : order.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm text-gray-300">
+                        <div><span className="text-gray-500 block text-xs uppercase tracking-wider mb-1">Mẫu xe</span> <span className="font-medium">{order.plan_name || 'Xe tiêu chuẩn'}</span></div>
+                        <div><span className="text-gray-500 block text-xs uppercase tracking-wider mb-1">Ngày đặt</span> <span className="font-medium">{new Date(order.created_at).toLocaleDateString('vi-VN')}</span></div>
+                        <div><span className="text-gray-500 block text-xs uppercase tracking-wider mb-1">Tổng tiền</span> <strong className="text-red-500 font-bold text-base">{Number(order.total_amount).toLocaleString()} VNĐ</strong></div>
+                        <div><span className="text-gray-500 block text-xs uppercase tracking-wider mb-1">Showroom</span> <span className="font-medium">{order.showroom || 'Không rõ'}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
         </div>

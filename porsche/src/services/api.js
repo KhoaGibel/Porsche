@@ -106,7 +106,8 @@ export const subAPI = {
 // PAYMENT
 // ─────────────────────────────────────────────
 export const paymentAPI = {
-  createPayment: (body) => authFetch('/payments/create', { method: 'POST', body: JSON.stringify(body) })
+  createPayment: (body) => authFetch('/payments/create', { method: 'POST', body: JSON.stringify(body) }),
+  getMyOrders: () => authFetch('/payments/my')
 };
 
 // Helpers quản lý Token
