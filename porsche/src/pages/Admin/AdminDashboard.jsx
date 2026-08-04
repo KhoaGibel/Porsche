@@ -331,20 +331,20 @@ export default function AdminDashboard() {
                               <td className="admin-td-mono">#{o.orderId}</td>
                               <td>
                                 <strong>{o.customerName}</strong><br/>
-                                <span style={{ fontSize: '11px', color: '#9ca3af' }}>{o.phone || o.showroom}</span>
+                                <span style={{ fontSize: '11px', color: '#64748b' }}>{o.phone || o.showroom}</span>
                               </td>
                               <td><span className="admin-badge-plan">{o.productName || 'Porsche Plan'}</span></td>
                               <td className="admin-td-amount">{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
                               <td className="admin-td-mono">
                                 {o.driveDate ? (
                                   <div>
-                                    <span style={{ color: statusKey === 'upcoming' ? '#3b82f6' : '#e5e7eb', fontWeight: statusKey === 'upcoming' ? 'bold' : 'normal' }}>
+                                    <span style={{ color: statusKey === 'upcoming' ? '#2563eb' : '#0f172a', fontWeight: statusKey === 'upcoming' ? 'bold' : '600' }}>
                                       {new Date(o.driveDate).toLocaleDateString('vi-VN')}
                                     </span>
-                                    {o.driveTime && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{o.driveTime}</div>}
+                                    {o.driveTime && <div style={{ fontSize: '11px', color: '#64748b' }}>{o.driveTime}</div>}
                                   </div>
                                 ) : (
-                                  <span style={{ color: '#6b7280' }}>Chưa xếp ngày</span>
+                                  <span style={{ color: '#94a3b8' }}>Chưa xếp ngày</span>
                                 )}
                               </td>
                               <td>
@@ -352,22 +352,22 @@ export default function AdminDashboard() {
                                   value={statusKey}
                                   onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
                                   style={{
-                                    background: 'rgba(255,255,255,0.06)',
-                                    color: ROLE_COLORS[statusKey] || '#ffffff',
-                                    border: `1px solid ${ROLE_COLORS[statusKey] || 'rgba(255,255,255,0.1)'}`,
-                                    borderRadius: '8px',
+                                    background: '#ffffff',
+                                    color: ROLE_COLORS[statusKey] || '#0f172a',
+                                    border: `1px solid ${ROLE_COLORS[statusKey] || '#cbd5e1'}`,
+                                    borderRadius: '6px',
                                     padding: '6px 10px',
                                     fontSize: '12px',
                                     fontWeight: 'bold',
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  <option value="pending_payment" style={{ background: '#121212', color: '#f59e0b' }}>Chờ thanh toán</option>
-                                  <option value="awaiting_cash" style={{ background: '#121212', color: '#f97316' }}>Chờ thu tiền mặt</option>
-                                  <option value="paid" style={{ background: '#121212', color: '#10b981' }}>Đã thanh toán</option>
-                                  <option value="upcoming" style={{ background: '#121212', color: '#3b82f6' }}>⚡ Sắp tới (Lái thử)</option>
-                                  <option value="completed" style={{ background: '#121212', color: '#6366f1' }}>Hoàn thành</option>
-                                  <option value="cancelled" style={{ background: '#121212', color: '#ef4444' }}>Đã hủy</option>
+                                  <option value="pending_payment" style={{ background: '#ffffff', color: '#d97706' }}>Chờ thanh toán</option>
+                                  <option value="awaiting_cash" style={{ background: '#ffffff', color: '#ea580c' }}>Chờ thu tiền mặt</option>
+                                  <option value="paid" style={{ background: '#ffffff', color: '#16a34a' }}>Đã thanh toán</option>
+                                  <option value="upcoming" style={{ background: '#ffffff', color: '#2563eb' }}>⚡ Sắp tới (Lái thử)</option>
+                                  <option value="completed" style={{ background: '#ffffff', color: '#4f46e5' }}>Hoàn thành</option>
+                                  <option value="cancelled" style={{ background: '#ffffff', color: '#dc2626' }}>Đã hủy</option>
                                 </select>
                               </td>
                               <td>
