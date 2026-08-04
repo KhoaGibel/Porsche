@@ -92,9 +92,9 @@ export default function AdminDashboard() {
 
   // ── Quản lý Gói Subscription (CRUD với LocalStorage) ──
   const DEFAULT_PACKAGES = [
-    { id: 1, name: 'Standard Experience', car: 'Porsche 911 GT3', duration: '1 ngày (24 giờ)', features: 'Bảo hiểm tiêu chuẩn, Hướng dẫn viên', price: 15000000, status: 'Đang mở bán' },
-    { id: 2, name: 'Track Performance', car: 'Porsche 911 GT3 RS', duration: '2 ngày (Trường đua)', features: 'Huấn luyện viên đua F1, Lốp chuyên dụng, Quay video 4K', price: 45000000, status: 'Đang mở bán' },
-    { id: 3, name: 'Supercar Ultimate', car: 'Porsche 911 Turbo S', duration: '3 ngày', features: 'Giao xe tận nhà, Đồ uống VIP, Độc quyền sự kiện', price: 80000000, status: 'Đang mở bán' },
+    { id: 'essential', name: 'Essential', car: 'Porsche 911 GT3', duration: '60 phút', features: '1 buổi lái thử 60 phút, Xe Porsche 911 GT3, Huấn luyện viên đi kèm, Bảo hiểm TNDS cơ bản, Chứng chỉ lái thử', price: 50000000, status: 'Đang mở bán' },
+    { id: 'performance', name: 'Performance', car: 'Porsche 911 GT3 RS', duration: '90 phút', features: '2 buổi lái thử 90 phút, Toàn bộ dòng xe, Huấn luyện viên chuyên nghiệp, Bảo hiểm tiêu chuẩn, Video HD + ảnh kỷ niệm, Lái thử trên track đua', price: 75000000, status: 'Đang mở bán' },
+    { id: 'elite', name: 'Elite', car: 'Porsche 911 Turbo S', duration: 'Trọn ngày', features: 'Lái thử trọn ngày (8 giờ), Toàn bộ dòng xe không giới hạn, HLV cá nhân Porsche Sport Driving School, Bảo hiểm cao cấp, Video onboard + drone footage, VIP lounge', price: 100000000, status: 'Đang mở bán' },
   ];
 
   const [packages, setPackages] = useState(() => {

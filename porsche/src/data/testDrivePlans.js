@@ -1,8 +1,7 @@
 
 export const fmt = (n) => n.toLocaleString('vi-VN') + '₫';
 
-// ── 3 gói đăng ký lái thử ──
-export const PLANS = [
+export const DEFAULT_PLANS = [
   {
     id:       'essential',
     name:     'Essential',
@@ -75,6 +74,48 @@ export const PLANS = [
     ],
   },
 ];
+
+export const getActivePlans = () => {
+  try {
+    const saved = localStorage.getItem('porsche_admin_packages');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((p, idx) => {
+          let featureList = [];
+          if (typeof p.features === 'string') {
+            featureList = p.features.split(',').map(f => ({ text: f.trim(), ok: true }));
+          } else if (Array.isArray(p.features)) {
+            featureList = p.features;
+          }
+          return {
+            id: String(p.id || `pkg-${idx}`),
+            name: p.name,
+            price: Number(p.price),
+            color: idx === 0 ? '#6b7280' : idx === 1 ? '#dc2626' : '#d4af37',
+            highlight: idx === 1,
+            badge: p.status === 'Tạm ngưng' ? 'Tạm ngưng' : (idx === 1 ? 'Phổ biến nhất' : idx === 2 ? 'VIP' : undefined),
+            duration: p.duration || '60 phút',
+            location: p.location || 'Showroom Porsche',
+            tagline: p.tagline || 'Gói trải nghiệm lái thử Porsche',
+            cars: Array.isArray(p.cars) ? p.cars : [p.car || 'Porsche 911 GT3'],
+            defaultInsurance: idx === 0 ? 'basic' : idx === 1 ? 'standard' : 'premium',
+            features: featureList.length > 0 ? featureList : [
+              { text: 'Bảo hiểm tiêu chuẩn', ok: true },
+              { text: 'Huấn luyện viên chuyên nghiệp', ok: true }
+            ],
+            status: p.status || 'Đang mở bán'
+          };
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Lỗi load packages:', e);
+  }
+  return DEFAULT_PLANS;
+};
+
+export const PLANS = getActivePlans();
 
 // ── Gói bảo hiểm ──
 export const INSURANCE = {
