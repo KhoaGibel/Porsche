@@ -3,7 +3,6 @@ import { Navigate, Link } from 'react-router-dom';
 import { Can, useAbility } from '../../hooks/useAbility';
 import useCarStore from '../../store/useCarStore';
 import { adminAPI } from '../../services/api';
-import './AdminDashboard.css';
 
 // ── Menu items — mỗi item có CASL check riêng ──
 const MENU_ITEMS = [
@@ -179,7 +178,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Hàm ẩn đơn hàng (Soft Delete không ảnh hưởng tới DB)
   const handleHideOrder = (orderId) => {
     if (!window.confirm('Bạn có chắc muốn ẩn đơn hàng này khỏi danh sách Admin?\n(Lưu ý: Thao tác này chỉ ẩn trên danh sách, dữ liệu trong CSDL MySQL hoàn toàn được giữ nguyên).')) return;
     const updated = [...hiddenOrderIds, orderId];
@@ -201,7 +199,6 @@ export default function AdminDashboard() {
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
-    // Cập nhật local state (frontend-only vì chưa có endpoint PUT /admin/users/:id)
     setUsers(prev => prev.map(u =>
       u._id === editingUser._id ? { ...u, ...userForm } : u
     ));
@@ -214,7 +211,13 @@ export default function AdminDashboard() {
     setUsers(prev => prev.filter(user => user._id !== u._id));
   };
 
-  // Tính toán tự động trạng thái 'Sắp tới' dựa trên ngày chạy thử
+  const handleUpdateUserRole = (userId, newRole) => {
+    if (!window.confirm(`Xác nhận cập nhật quyền cho người dùng này?`)) return;
+    setUsers(prev => prev.map(u => 
+      u._id === userId ? { ...u, role: newRole } : u
+    ));
+  };
+
   const getEffectiveOrderStatus = (order) => {
     if (order.status === 'cancelled' || order.status === 'completed') return order.status;
     if (order.driveDate) {
@@ -230,89 +233,129 @@ export default function AdminDashboard() {
     return order.status;
   };
 
-  // Lọc các đơn không bị ẩn
   const displayOrders = orders.filter(o => !hiddenOrderIds.includes(o.id));
 
+  // Thống nhất các Tailwind Classes dùng chung
+  const btnRefreshClass = "inline-flex items-center justify-center gap-1.5 bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg cursor-pointer text-[13px] font-bold transition-all shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:-translate-y-0.5 hover:shadow-md active:scale-95 disabled:opacity-50";
+  const btnSuccessClass = "inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:bg-emerald-100 hover:text-emerald-800 hover:-translate-y-px shadow-sm active:scale-95";
+  const btnDangerClass = "inline-flex items-center gap-1 text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:bg-red-100 hover:text-red-800 hover:-translate-y-px shadow-sm active:scale-95";
+  const btnPrimaryClass = "inline-flex items-center gap-1 text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:bg-blue-100 hover:text-blue-700 hover:-translate-y-px shadow-sm active:scale-95";
+  
+  const thClass = "px-5 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-widest text-left whitespace-nowrap";
+  const tdClass = "px-5 py-4 border-b border-slate-100 align-middle text-slate-800 transition-colors group-hover:bg-slate-50/70";
+  const tableWrapClass = "bg-white border border-slate-200 rounded-2xl overflow-hidden overflow-x-auto shadow-sm";
+
   return (
-    <div className="admin-layout">
+    <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-red-200 selection:text-red-900 relative">
+      {/* ── Bầu trời Pattern Mờ ảo ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-red-50 blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50 blur-[100px]"></div>
+      </div>
+
       {/* ── Sidebar ── */}
-      <aside className={`admin-sidebar ${!sidebarOpen ? 'collapsed' : ''}`}>
-        <div className="admin-sidebar-header">
-          <Link to="/" style={{ textDecoration: 'none' }}>
-            <div className="porsche-text-logo">
-            PORSCHE
-          </div>
-</Link>
-          <button className="admin-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+      <aside className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-300 sticky top-0 h-screen overflow-y-auto overflow-x-hidden shrink-0 z-20 shadow-[2px_0_10px_rgba(0,0,0,0.02)] ${sidebarOpen ? 'w-[260px]' : 'w-[72px]'}`}>
+        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100 min-h-[72px]">
+          <Link to="/" className="text-decoration-none focus:outline-none">
+            <div className={`text-[18px] font-black tracking-[0.2em] text-slate-900 whitespace-nowrap overflow-hidden transition-colors hover:text-red-600 ${!sidebarOpen && 'opacity-0 w-0'}`}>
+              PORSCHE
+            </div>
+          </Link>
+          <button 
+            className="w-7 h-7 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[10px] flex items-center justify-center shrink-0 cursor-pointer transition-all hover:bg-red-600 hover:border-red-600 hover:text-white"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
             {sidebarOpen ? '◀' : '▶'}
           </button>
         </div>
         
         {sidebarOpen && (
-          <div className="admin-user-info">
-            <div className="admin-avatar">
+          <div className="flex items-center gap-3 px-4 py-4 mx-3 mt-4 mb-2 rounded-xl bg-slate-50 border border-slate-200 shadow-sm">
+            <div className="w-[40px] h-[40px] rounded-lg bg-gradient-to-br from-red-600 to-orange-500 text-white text-sm font-black flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(220,38,38,0.3)]">
               {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'A'}
             </div>
-            <div style={{ overflow: 'hidden' }}>
-              <div className="admin-user-name">{user?.displayName || 'ADMIN'}</div>
-              <div className="admin-user-role">{user?.role || 'Super Admin'}</div>
+            <div className="overflow-hidden">
+              <div className="text-[13px] font-bold text-slate-900 truncate">{user?.displayName || 'ADMIN'}</div>
+              <div className="text-[10px] text-red-600 uppercase tracking-widest font-bold mt-0.5">{user?.role || 'Super Admin'}</div>
             </div>
           </div>
         )}
 
-        <nav className="admin-nav">
-          {visibleMenu.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveMenu(item.id)}
-              className={`admin-nav-item ${activeMenu === item.id ? 'active' : ''}`}
-            >
-              <span className="admin-nav-icon">{item.icon}</span>
-              {sidebarOpen && <span className="admin-nav-label">{item.label}</span>}
-            </button>
-          ))}
+        <div className={`text-[10px] font-black tracking-[0.15em] text-slate-400 px-5 pt-4 pb-2 transition-opacity ${!sidebarOpen && 'opacity-0'}`}>
+          MENU
+        </div>
+
+        <nav className="flex-1 px-3 py-2 flex flex-col gap-1.5">
+          {visibleMenu.map(item => {
+            const isActive = activeMenu === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-[13.5px] font-semibold cursor-pointer transition-all w-full text-left whitespace-nowrap relative outline-none focus-visible:ring-2 focus-visible:ring-red-500 group ${
+                  isActive 
+                    ? 'bg-red-50 border-red-200 text-red-700 shadow-sm' 
+                    : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[60%] bg-red-600 rounded-r-md"></div>
+                )}
+                <span className={`text-[18px] shrink-0 w-6 text-center transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>{item.icon}</span>
+                {sidebarOpen && <span>{item.label}</span>}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
       {/* ── Main content ── */}
-      <main className="admin-main">
-        <header className="admin-topbar">
+      <main className="flex-1 flex flex-col min-w-0 z-10 relative">
+        <header className="flex items-center justify-between px-8 h-[72px] bg-white/80 backdrop-blur-xl border-b border-slate-200 shrink-0 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div>
-            <h1 className="admin-page-title">
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
               {MENU_ITEMS.find(m => m.id === activeMenu)?.label || 'Dashboard'}
             </h1>
-            <div className="admin-breadcrumb">Admin / {MENU_ITEMS.find(m => m.id === activeMenu)?.label}</div>
+            <div className="text-xs text-slate-500 mt-0.5 font-medium">
+              Admin / <span className="text-slate-800">{MENU_ITEMS.find(m => m.id === activeMenu)?.label}</span>
+            </div>
           </div>
-          <div className="admin-date">{new Date().toLocaleDateString('vi-VN')}</div>
+          <div className="flex items-center gap-2 text-[13px] text-slate-700 font-bold bg-slate-100 px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+            <span className="text-[14px]">📅</span> {new Date().toLocaleDateString('vi-VN')}
+          </div>
         </header>
 
         {/* ── 1. GIAO DIỆN TAB TỔNG QUAN ── */}
         {activeMenu === 'overview' && (
-          <div className="admin-content">
-            <div className="admin-section">
-              <div className="admin-section-header">
+          <div className="p-8 flex-1 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="mb-8">
+              <div className="flex justify-between items-end mb-6">
                 <div>
-                  <h2 className="admin-section-title">Tổng quan hệ thống</h2>
-                  <p className="admin-section-desc">Theo dõi các chỉ số quan trọng.</p>
+                  <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Tổng quan hệ thống</h2>
+                  <p className="text-[13px] text-slate-500 font-medium">Theo dõi các chỉ số và dữ liệu quan trọng của Porsche.</p>
                 </div>
-                <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                <button onClick={fetchData} className={btnRefreshClass}>🔄 Làm mới</button>
               </div>
               
               {loading ? (
-                <div className="admin-empty-state">Đang tải dữ liệu tổng quan...</div>
+                <div className="text-center p-12 text-slate-500 text-sm bg-white rounded-2xl border border-slate-200 border-dashed">Đang tải dữ liệu tổng quan...</div>
               ) : stats.length === 0 ? (
-                <div className="admin-empty-state">Chưa có dữ liệu thống kê từ Server.</div>
+                <div className="text-center p-12 text-slate-500 text-sm bg-white rounded-2xl border border-slate-200 border-dashed">Chưa có dữ liệu thống kê từ Server.</div>
               ) : (
-                <div className="admin-stats">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {stats.map((stat, idx) => (
-                    <div key={idx} className="admin-stat-card">
-                      <div className="admin-stat-icon" style={{ color: stat.color, background: stat.bg }}>
+                    <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 flex gap-4 items-start shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden group">
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-[24px] shrink-0 shadow-sm" style={{ color: stat.color, background: stat.bg }}>
                         {stat.icon}
                       </div>
                       <div>
-                        <div className="admin-stat-label">{stat.label}</div>
-                        <div className="admin-stat-value">{stat.value}</div>
-                        <div className="admin-stat-delta" style={{ color: '#059669' }}>{stat.delta} so với kỳ trước</div>
+                        <div className="text-[11px] text-slate-500 mb-1.5 font-extrabold uppercase tracking-widest">{stat.label}</div>
+                        <div className="text-[28px] font-black text-slate-900 mb-1 tracking-tight leading-none">{stat.value}</div>
+                        <div className="text-[12px] font-bold text-emerald-600 flex items-center gap-1 mt-2">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                          {stat.delta} <span className="text-slate-400 font-medium ml-1">so với tháng trước</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -325,58 +368,70 @@ export default function AdminDashboard() {
         {/* ── 2. QUẢN LÝ NGƯỜI DÙNG ── */}
         {activeMenu === 'users' && (
           <Can do="read" on="User">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="flex justify-between items-end mb-6">
                   <div>
-                    <h2 className="admin-section-title">Quản lý Tài Khoản</h2>
-                    <p className="admin-section-desc">Danh sách toàn bộ khách hàng và nhân viên.</p>
+                    <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Quản lý Tài Khoản</h2>
+                    <p className="text-[13px] text-slate-500 font-medium">Danh sách khách hàng đăng ký và nhân viên hệ thống.</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
-                  </div>
+                  <button onClick={fetchData} className={btnRefreshClass}>🔄 Làm mới</button>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[850px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Tên hiển thị</th>
-                        <th>Email</th>
-                        <th>Quyền (Role)</th>
-                        <th>Đăng nhập qua</th>
-                        <th>Ngày tạo</th>
-                        <th>Thao tác</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Tên hiển thị</th>
+                        <th className={thClass}>Email</th>
+                        <th className={thClass}>Quyền (Role)</th>
+                        <th className={thClass}>Đăng nhập</th>
+                        <th className={thClass}>Ngày tạo</th>
+                        <th className={thClass}>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="6" className="admin-empty-state">Đang tải dữ liệu Users...</td></tr>
+                        <tr><td colSpan="6" className="text-center p-12 text-slate-500 text-sm border-dashed">Đang tải dữ liệu Users...</td></tr>
                       ) : users.length === 0 ? (
-                        <tr><td colSpan="6" className="admin-empty-state">Chưa có tài khoản nào.</td></tr>
+                        <tr><td colSpan="6" className="text-center p-12 text-slate-500 text-sm border-dashed">Chưa có tài khoản nào.</td></tr>
                       ) : (
                         users.map((u) => (
-                          <tr key={u._id}>
-                            <td><strong>{u.fullName || u.displayName}</strong></td>
-                            <td className="admin-td-mono">{u.email}</td>
-                            <td>
-                              <span className={`admin-badge-car ${u.role === 'admin' ? 'admin-role-admin' : ''}`}>
-                                {u.role?.toUpperCase() || 'USER'}
+                          <tr key={u._id} className="group transition-colors">
+                            <td className={tdClass}>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                  {(u.fullName || u.displayName || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <strong className="text-slate-900">{u.fullName || u.displayName}</strong>
+                              </div>
+                            </td>
+                            <td className={`${tdClass} font-mono text-[13px] text-slate-500`}>{u.email}</td>
+                            <td className={tdClass}>
+                              <select
+                                value={u.role || 'user'}
+                                onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
+                                className={`px-3 py-1.5 rounded-lg text-[11.5px] font-bold border outline-none cursor-pointer tracking-wide transition-colors focus:ring-2 focus:ring-slate-200 ${
+                                  u.role === 'admin' ? 'bg-red-50 text-red-600 border-red-200' : 
+                                  u.role === 'dealer_manager' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                  'bg-slate-100 text-slate-600 border-slate-200'
+                                }`}
+                              >
+                                <option value="user" className="bg-white text-slate-700">USER / KHÁCH HÀNG</option>
+                                <option value="dealer_manager" className="bg-white text-slate-700">DEALER MANAGER</option>
+                                <option value="admin" className="bg-white text-slate-700">SUPER ADMIN</option>
+                              </select>
+                            </td>
+                            <td className={tdClass}>
+                              <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-500">
+                                {u.authProvider || u.provider || 'Email'}
                               </span>
                             </td>
-                            <td>{u.authProvider || u.provider || '—'}</td>
-                            <td className="admin-td-mono">{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                  className="btn-text-primary"
-                                  onClick={() => handleOpenEditUser(u)}
-                                >✏️ Sửa</button>
-                                <button
-                                  className="btn-outline-danger"
-                                  style={{ fontSize: '12px', padding: '4px 10px' }}
-                                  onClick={() => handleDeleteUser(u)}
-                                >🗑️ Xóa</button>
+                            <td className={`${tdClass} font-mono text-[13px] text-slate-500`}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
+                            <td className={tdClass}>
+                              <div className="flex gap-2">
+                                <button className={btnPrimaryClass} onClick={() => handleOpenEditUser(u)}>✏️ Sửa</button>
+                                <button className={btnDangerClass} onClick={() => handleDeleteUser(u)}>🗑️ Xóa</button>
                               </div>
                             </td>
                           </tr>
@@ -393,95 +448,91 @@ export default function AdminDashboard() {
         {/* ── 3. QUẢN LÝ ĐƠN HÀNG/THANH TOÁN ── */}
         {activeMenu === 'orders' && (
           <Can do="read" on="Order">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="flex justify-between items-end mb-6">
                   <div>
-                    <h2 className="admin-section-title">Quản lý Đơn Hàng & Lái Thử</h2>
-                    <p className="admin-section-desc">Theo dõi đơn hàng, chuyển trạng thái và quản lý danh sách.</p>
+                    <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Quản lý Đơn Hàng & Lái Thử</h2>
+                    <p className="text-[13px] text-slate-500 font-medium">Theo dõi các giao dịch tài chính và đặt cọc xe.</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="flex gap-2">
                     {hiddenOrderIds.length > 0 && (
-                      <button onClick={handleResetHiddenOrders} className="admin-btn-refresh" style={{ borderColor: '#ef4444', color: '#ef4444' }}>
+                      <button onClick={handleResetHiddenOrders} className={`${btnRefreshClass} !text-red-500 !border-red-200 hover:!bg-red-50`}>
                         👁️ Hiện {hiddenOrderIds.length} đơn đã ẩn
                       </button>
                     )}
-                    <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                    <button onClick={fetchData} className={btnRefreshClass}>🔄 Làm mới</button>
                   </div>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[900px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Mã đơn (ID)</th>
-                        <th>Khách hàng</th>
-                        <th>Sản phẩm / Gói</th>
-                        <th>Tổng tiền</th>
-                        <th>Ngày lái thử</th>
-                        <th>Chuyển Trạng thái</th>
-                        <th>Thao tác</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Mã đơn</th>
+                        <th className={thClass}>Khách hàng</th>
+                        <th className={thClass}>Sản phẩm / Gói</th>
+                        <th className={thClass}>Tổng tiền</th>
+                        <th className={thClass}>Lịch chạy</th>
+                        <th className={thClass}>Trạng thái đơn</th>
+                        <th className={thClass}>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="7" className="admin-empty-state">Đang tải dữ liệu Thanh toán...</td></tr>
+                        <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Đang tải dữ liệu...</td></tr>
                       ) : displayOrders.length === 0 ? (
-                        <tr><td colSpan="7" className="admin-empty-state">Chưa có giao dịch nào (hoặc đã ẩn toàn bộ).</td></tr>
+                        <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Chưa có giao dịch nào.</td></tr>
                       ) : (
                         displayOrders.map((o) => {
                           const statusKey = getEffectiveOrderStatus(o);
                           return (
-                            <tr key={o.id}>
-                              <td className="admin-td-mono">#{o.orderId}</td>
-                              <td>
-                                <strong>{o.customerName}</strong><br/>
-                                <span style={{ fontSize: '11px', color: '#64748b' }}>{o.phone || o.showroom}</span>
+                            <tr key={o.id} className="group transition-colors">
+                              <td className={`${tdClass} font-mono text-[13px] font-medium text-slate-600`}>#{o.orderId}</td>
+                              <td className={tdClass}>
+                                <div className="font-bold text-slate-900">{o.customerName}</div>
+                                <div className="text-[11px] text-slate-500 font-medium mt-0.5">{o.phone || o.showroom}</div>
                               </td>
-                              <td><span className="admin-badge-plan">{o.productName || 'Porsche Plan'}</span></td>
-                              <td className="admin-td-amount">{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
-                              <td className="admin-td-mono">
+                              <td className={tdClass}>
+                                <span className="inline-flex items-center px-2.5 py-1 bg-gradient-to-r from-red-50 to-orange-50 text-red-600 border border-red-200/50 rounded-md text-[11.5px] font-bold shadow-sm">
+                                  {o.productName || 'Porsche Plan'}
+                                </span>
+                              </td>
+                              <td className={`${tdClass} font-black text-red-600 tracking-tight text-[15px]`}>{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
+                              <td className={`${tdClass} font-mono`}>
                                 {o.driveDate ? (
                                   <div>
-                                    <span style={{ color: statusKey === 'upcoming' ? '#2563eb' : '#0f172a', fontWeight: statusKey === 'upcoming' ? 'bold' : '600' }}>
+                                    <div className={`${statusKey === 'upcoming' ? 'text-blue-600 font-bold' : 'text-slate-700 font-semibold'} text-[13px]`}>
                                       {new Date(o.driveDate).toLocaleDateString('vi-VN')}
-                                    </span>
-                                    {o.driveTime && <div style={{ fontSize: '11px', color: '#64748b' }}>{o.driveTime}</div>}
+                                    </div>
+                                    {o.driveTime && <div className="text-[11px] text-slate-500 font-medium mt-0.5">{o.driveTime}</div>}
                                   </div>
                                 ) : (
-                                  <span style={{ color: '#94a3b8' }}>Chưa xếp ngày</span>
+                                  <span className="text-slate-400 italic text-[12.5px]">Chưa xếp lịch</span>
                                 )}
                               </td>
-                              <td>
+                              <td className={tdClass}>
                                 <select
                                   value={statusKey}
                                   onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                                  className="px-3 py-1.5 rounded-lg text-[11.5px] font-bold border outline-none cursor-pointer tracking-wide shadow-sm focus:ring-2 focus:ring-slate-200 transition-colors"
                                   style={{
-                                    background: '#ffffff',
                                     color: ROLE_COLORS[statusKey] || '#0f172a',
-                                    border: `1px solid ${ROLE_COLORS[statusKey] || '#cbd5e1'}`,
-                                    borderRadius: '6px',
-                                    padding: '6px 10px',
-                                    fontSize: '12px',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer'
+                                    backgroundColor: `${ROLE_COLORS[statusKey]}10`,
+                                    borderColor: `${ROLE_COLORS[statusKey]}30`
                                   }}
                                 >
-                                  <option value="pending_payment" style={{ background: '#ffffff', color: '#d97706' }}>Chờ thanh toán</option>
-                                  <option value="awaiting_cash" style={{ background: '#ffffff', color: '#ea580c' }}>Chờ thu tiền mặt</option>
-                                  <option value="paid" style={{ background: '#ffffff', color: '#16a34a' }}>Đã thanh toán</option>
-                                  <option value="upcoming" style={{ background: '#ffffff', color: '#2563eb' }}>⚡ Sắp tới (Lái thử)</option>
-                                  <option value="completed" style={{ background: '#ffffff', color: '#4f46e5' }}>Hoàn thành</option>
-                                  <option value="cancelled" style={{ background: '#ffffff', color: '#dc2626' }}>Đã hủy</option>
+                                  <option value="pending_payment" className="bg-white text-amber-600">CHỜ THANH TOÁN</option>
+                                  <option value="awaiting_cash" className="bg-white text-orange-600">CHỜ THU TIỀN</option>
+                                  <option value="paid" className="bg-white text-emerald-600">ĐÃ THANH TOÁN</option>
+                                  <option value="upcoming" className="bg-white text-blue-600">⚡ SẮP TỚI</option>
+                                  <option value="completed" className="bg-white text-indigo-600">HOÀN THÀNH</option>
+                                  <option value="cancelled" className="bg-white text-red-600">ĐÃ HỦY</option>
                                 </select>
                               </td>
-                              <td>
-                                <button 
-                                  onClick={() => handleHideOrder(o.id)}
-                                  className="btn-outline-danger"
-                                  title="Ẩn đơn khỏi giao diện (Giữ nguyên CSDL)"
-                                >
-                                  🗑️ Xóa (Ẩn)
+                              <td className={tdClass}>
+                                <button onClick={() => handleHideOrder(o.id)} className={btnDangerClass}>
+                                  🗑️ Ẩn đơn
                                 </button>
                               </td>
                             </tr>
@@ -499,75 +550,74 @@ export default function AdminDashboard() {
         {/* ── 4. LỊCH LÁI THỬ ── */}
         {activeMenu === 'testdrives' && (
           <Can do="manage" on="TestDrive">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="flex justify-between items-end mb-6">
                   <div>
-                    <h2 className="admin-section-title">Quản lý lịch lái thử</h2>
-                    <p className="admin-section-desc">Xác nhận và sắp xếp lịch trải nghiệm xe cho khách hàng.</p>
+                    <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Quản lý lịch lái thử</h2>
+                    <p className="text-[13px] text-slate-500 font-medium">Sắp xếp, phê duyệt lịch hẹn lái thử từ khách hàng.</p>
                   </div>
-                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                  <button onClick={fetchData} className={btnRefreshClass}>🔄 Làm mới</button>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[900px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Xe / Gói</th>
-                        <th>Thời gian</th>
-                        <th>Showroom</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Mã đơn</th>
+                        <th className={thClass}>Khách hàng</th>
+                        <th className={thClass}>Xe đăng ký</th>
+                        <th className={thClass}>Thời gian</th>
+                        <th className={thClass}>Showroom</th>
+                        <th className={thClass}>Trạng thái hiện tại</th>
+                        <th className={thClass}>Đổi trạng thái</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="7" className="admin-empty-state">Đang tải dữ liệu...</td></tr>
+                        <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Đang tải dữ liệu...</td></tr>
                       ) : testDrives.length === 0 ? (
-                        <tr><td colSpan="7" className="admin-empty-state">Chưa có dữ liệu lịch lái thử.</td></tr>
+                        <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Chưa có lịch hẹn nào.</td></tr>
                       ) : (
                         testDrives.map((t) => (
-                          <tr key={t._id}>
-                            <td className="admin-td-mono">{t.orderNumber}</td>
-                            <td>
-                              <strong>{t.userName || t.user}</strong><br/>
-                              <span style={{ fontSize: '11px', color: '#6b7280' }}>{t.phone}</span>
+                          <tr key={t._id} className="group transition-colors">
+                            <td className={`${tdClass} font-mono text-[13px] font-medium text-slate-600`}>{t.orderNumber}</td>
+                            <td className={tdClass}>
+                              <div className="font-bold text-slate-900">{t.userName || t.user}</div>
+                              <div className="text-[11px] text-slate-500 font-medium mt-0.5">{t.phone}</div>
                             </td>
-                            <td>
-                              <span className="admin-badge-car">{t.cars?.join(', ') || t.car}</span><br/>
-                              <span style={{ fontSize: '11px', color: '#6b7280' }}>{t.planName}</span>
+                            <td className={tdClass}>
+                              <span className="inline-flex items-center px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[11.5px] font-semibold text-slate-700">
+                                {t.cars?.join(', ') || t.car}
+                              </span>
+                              <div className="text-[11px] text-slate-500 font-medium mt-1">{t.planName}</div>
                             </td>
-                            <td className="admin-td-mono">{new Date(t.scheduledAt).toLocaleString('vi-VN')}</td>
-                            <td>{t.showroom}</td>
-                            <td>
-                              <span className="admin-status" style={{ color: ROLE_COLORS[t.status], background: ROLE_COLORS[t.status] + '20' }}>
-                                {ROLE_LABELS[t.status] || t.status}
+                            <td className={`${tdClass} font-mono text-[13px] font-semibold text-slate-700`}>{new Date(t.scheduledAt).toLocaleString('vi-VN')}</td>
+                            <td className={`${tdClass} text-[13px] font-medium text-slate-700`}>{t.showroom}</td>
+                            <td className={tdClass}>
+                              <span 
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide shadow-sm"
+                                style={{ color: ROLE_COLORS[t.status], backgroundColor: `${ROLE_COLORS[t.status]}15`, border: `1px solid ${ROLE_COLORS[t.status]}30` }}
+                              >
+                                {ROLE_LABELS[t.status] || t.status?.toUpperCase()}
                               </span>
                             </td>
-                            <td>
+                            <td className={tdClass}>
                               <select
                                 value={t.status}
                                 onChange={(e) => handleUpdateStatus(t._id, e.target.value)}
+                                className="px-3 py-1.5 rounded-lg text-[11.5px] font-bold border outline-none cursor-pointer tracking-wide transition-colors focus:ring-2 focus:ring-slate-200"
                                 style={{
-                                  background: '#ffffff',
                                   color: ROLE_COLORS[t.status] || '#0f172a',
-                                  border: `1px solid ${ROLE_COLORS[t.status] || '#cbd5e1'}`,
-                                  borderRadius: '6px',
-                                  padding: '5px 8px',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold',
-                                  cursor: 'pointer',
-                                  minWidth: '130px'
+                                  borderColor: ROLE_COLORS[t.status] || '#cbd5e1'
                                 }}
                               >
-                                <option value="pending">Chờ duyệt</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="paid">Đã thanh toán</option>
-                                <option value="upcoming">⚡ Sắp tới</option>
-                                <option value="completed">Hoàn thành</option>
-                                <option value="cancelled">Đã hủy</option>
+                                <option value="pending" className="text-amber-600">Chờ duyệt</option>
+                                <option value="confirmed" className="text-emerald-600">Đã xác nhận</option>
+                                <option value="paid" className="text-emerald-600">Đã thanh toán</option>
+                                <option value="upcoming" className="text-blue-600">⚡ Sắp tới</option>
+                                <option value="completed" className="text-indigo-600">Hoàn thành</option>
+                                <option value="cancelled" className="text-red-600">Đã hủy</option>
                               </select>
                             </td>
                           </tr>
@@ -584,52 +634,50 @@ export default function AdminDashboard() {
         {/* ── 5. QUẢN LÝ XE ── */}
         {activeMenu === 'cars' && (
           <Can do="manage" on="Car">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
-                  <div>
-                    <h2 className="admin-section-title">Danh mục Dòng xe</h2>
-                    <p className="admin-section-desc">Cấu hình thông số và màu sắc các mẫu xe Showroom 3D.</p>
-                  </div>
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="mb-6">
+                  <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Danh mục Dòng xe</h2>
+                  <p className="text-[13px] text-slate-500 font-medium">Cấu hình thông số các mẫu xe trải nghiệm 3D Showroom.</p>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[700px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Tên dòng xe</th>
-                        <th>Động cơ / Mã lực</th>
-                        <th>Tốc độ tối đa</th>
-                        <th>Tăng tốc (0-100km/h)</th>
-                        <th>Giá niêm yết</th>
-                        <th>Trạng thái 3D</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Tên dòng xe</th>
+                        <th className={thClass}>Động cơ / Mã lực</th>
+                        <th className={thClass}>Tốc độ tối đa</th>
+                        <th className={thClass}>0-100km/h</th>
+                        <th className={thClass}>Giá niêm yết</th>
+                        <th className={thClass}>Trạng thái 3D</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td><strong>Porsche 911 GT3 RS</strong></td>
-                        <td>4.0L Atmospheric / 525 HP</td>
-                        <td>296 km/h</td>
-                        <td>3.2s</td>
-                        <td className="admin-td-amount">15.830.000.000 ₫</td>
-                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>Porsche 911 GT3</strong></td>
-                        <td>4.0L Flat-6 / 510 HP</td>
-                        <td>318 km/h</td>
-                        <td>3.4s</td>
-                        <td className="admin-td-amount">13.600.000.000 ₫</td>
-                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>Porsche 911 Turbo S</strong></td>
-                        <td>3.8L Twin-Turbo / 650 HP</td>
-                        <td>330 km/h</td>
-                        <td>2.7s</td>
-                        <td className="admin-td-amount">17.380.000.000 ₫</td>
-                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
-                      </tr>
+                      {['Porsche 911 GT3 RS', 'Porsche 911 GT3', 'Porsche 911 Turbo S'].map((carName, idx) => (
+                        <tr key={idx} className="group transition-colors">
+                          <td className={tdClass}>
+                            <strong className="text-slate-900">{carName}</strong>
+                          </td>
+                          <td className={`${tdClass} text-slate-600`}>
+                            {idx === 0 ? '4.0L Atmospheric / 525 HP' : idx === 1 ? '4.0L Flat-6 / 510 HP' : '3.8L Twin-Turbo / 650 HP'}
+                          </td>
+                          <td className={`${tdClass} font-mono text-[13px] font-medium text-slate-600`}>
+                            {idx === 0 ? '296 km/h' : idx === 1 ? '318 km/h' : '330 km/h'}
+                          </td>
+                          <td className={`${tdClass} font-mono text-[13px] font-medium text-slate-600`}>
+                            {idx === 0 ? '3.2s' : idx === 1 ? '3.4s' : '2.7s'}
+                          </td>
+                          <td className={`${tdClass} font-black text-red-600 tracking-tight`}>
+                            {idx === 0 ? '15.830.000.000 ₫' : idx === 1 ? '13.600.000.000 ₫' : '17.380.000.000 ₫'}
+                          </td>
+                          <td className={tdClass}>
+                            <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-[11px] font-bold">
+                              ✓ Sẵn sàng
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -638,54 +686,58 @@ export default function AdminDashboard() {
           </Can>
         )}
 
-        {/* ── 6. GÓI SUBSCRIPTION (HỖ TRỢ THÊM / SỬA / XÓA) ── */}
+        {/* ── 6. GÓI SUBSCRIPTION ── */}
         {activeMenu === 'shop' && (
           <Can do="manage" on="Shop">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="flex justify-between items-end mb-6">
                   <div>
-                    <h2 className="admin-section-title">Quản lý Gói Trải Nghiệm & Subscription</h2>
-                    <p className="admin-section-desc">Danh sách các gói đăng ký trải nghiệm xe Porsche.</p>
+                    <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Gói Trải Nghiệm & Subscription</h2>
+                    <p className="text-[13px] text-slate-500 font-medium">Quản lý các gói đăng ký chạy track chuyên nghiệp.</p>
                   </div>
-                  <button onClick={handleOpenAddPkg} className="admin-btn-refresh" style={{ background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}>
+                  <button onClick={handleOpenAddPkg} className="inline-flex items-center gap-1.5 bg-red-600 text-white px-4 py-2 rounded-lg text-[13px] font-bold transition-all shadow-md hover:bg-red-700 hover:-translate-y-0.5 hover:shadow-lg active:scale-95">
                     ➕ Thêm gói mới
                   </button>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[950px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Tên gói</th>
-                        <th>Dòng xe hỗ trợ</th>
-                        <th>Thời lượng</th>
-                        <th>Dịch vụ kèm theo</th>
-                        <th>Giá niêm yết</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Tên gói</th>
+                        <th className={thClass}>Dòng xe</th>
+                        <th className={thClass}>Thời lượng</th>
+                        <th className={thClass}>Dịch vụ kèm theo</th>
+                        <th className={thClass}>Giá niêm yết</th>
+                        <th className={thClass}>Trạng thái</th>
+                        <th className={thClass}>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {packages.length === 0 ? (
-                        <tr><td colSpan="7" className="admin-empty-state">Chưa có gói trải nghiệm nào. Bấm nút Thêm gói mới để tạo.</td></tr>
+                        <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Chưa có gói trải nghiệm nào.</td></tr>
                       ) : (
                         packages.map((p) => (
-                          <tr key={p.id}>
-                            <td><strong>{p.name}</strong></td>
-                            <td><span className="admin-badge-car">{p.car}</span></td>
-                            <td>{p.duration}</td>
-                            <td style={{ maxWidth: '220px', fontSize: '13px' }}>{p.features}</td>
-                            <td className="admin-td-amount">{Number(p.price).toLocaleString('vi-VN')} ₫</td>
-                            <td>
-                              <span className="admin-status" style={{ color: p.status === 'Đang mở bán' ? '#16a34a' : '#dc2626', background: p.status === 'Đang mở bán' ? '#f0fdf4' : '#fef2f2' }}>
+                          <tr key={p.id} className="group transition-colors">
+                            <td className={`${tdClass} font-extrabold text-slate-900`}>{p.name}</td>
+                            <td className={tdClass}>
+                              <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700">
+                                {p.car}
+                              </span>
+                            </td>
+                            <td className={`${tdClass} font-medium text-slate-700`}>{p.duration}</td>
+                            <td className={`${tdClass} text-[12.5px] leading-relaxed text-slate-600 max-w-[250px]`}>{p.features}</td>
+                            <td className={`${tdClass} font-black text-red-600 tracking-tight text-[15px]`}>{Number(p.price).toLocaleString('vi-VN')} ₫</td>
+                            <td className={tdClass}>
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${p.status === 'Đang mở bán' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                                 {p.status}
                               </span>
                             </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={() => handleOpenEditPkg(p)} className="btn-outline-success">✏️ Sửa</button>
-                                <button onClick={() => handleDeletePkg(p.id)} className="btn-outline-danger">🗑️ Xóa</button>
+                            <td className={tdClass}>
+                              <div className="flex gap-2">
+                                <button onClick={() => handleOpenEditPkg(p)} className={btnSuccessClass}>✏️ Sửa</button>
+                                <button onClick={() => handleDeletePkg(p.id)} className={btnDangerClass}>🗑️ Xóa</button>
                               </div>
                             </td>
                           </tr>
@@ -702,51 +754,61 @@ export default function AdminDashboard() {
         {/* ── 7. PHÂN QUYỀN HỆ THỐNG ── */}
         {activeMenu === 'roles' && (
           <Can do="manage" on="all">
-            <div className="admin-content">
-              <div className="admin-section">
-                <div className="admin-section-header">
-                  <div>
-                    <h2 className="admin-section-title">Phân Quyền Vai Trò (Ma Trận CASL / RBAC)</h2>
-                    <p className="admin-section-desc">Cấu hình quyền hạn truy cập các chức năng cho từng cấp độ người dùng.</p>
-                  </div>
+            <div className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mb-8 max-w-7xl mx-auto w-full">
+                <div className="mb-6">
+                  <h2 className="text-[18px] font-extrabold text-slate-900 mb-1 tracking-tight">Phân Quyền Vai Trò (Ma Trận RBAC)</h2>
+                  <p className="text-[13px] text-slate-500 font-medium">Bảng tham chiếu chi tiết quyền hạn truy cập của từng cấp độ.</p>
                 </div>
 
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
+                <div className={tableWrapClass}>
+                  <table className="w-full text-[13.5px] min-w-[900px] border-collapse">
                     <thead>
-                      <tr>
-                        <th>Vai trò (Role)</th>
-                        <th>Mô tả cấp bậc</th>
-                        <th>Quyền Dashboard</th>
-                        <th>Quyền Quản lý User</th>
-                        <th>Quyền Đơn hàng</th>
-                        <th>Quyền Lịch lái thử / Car</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className={thClass}>Vai trò (Role)</th>
+                        <th className={thClass}>Mô tả cấp bậc</th>
+                        <th className={thClass}>Dashboard</th>
+                        <th className={thClass}>Quản lý User</th>
+                        <th className={thClass}>Đơn hàng</th>
+                        <th className={thClass}>Test Drive & Xe</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td><span className="admin-badge-car admin-role-admin">SUPER ADMIN</span></td>
-                        <td>Quản trị viên toàn quyền hệ thống</td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                      <tr className="group transition-colors">
+                        <td className={tdClass}>
+                          <span className="inline-flex items-center px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-md text-[11px] font-black tracking-widest">
+                            SUPER ADMIN
+                          </span>
+                        </td>
+                        <td className={`${tdClass} font-medium text-slate-700`}>Quản trị viên toàn quyền hệ thống</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Manage</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Manage</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Manage</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Manage</td>
                       </tr>
-                      <tr>
-                        <td><span className="admin-badge-car" style={{ background: '#3b82f620', color: '#60a5fa' }}>DEALER MANAGER</span></td>
-                        <td>Quản lý đại lý showroom</td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read</span></td>
-                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Confirm</span></td>
-                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                      <tr className="group transition-colors">
+                        <td className={tdClass}>
+                          <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-[11px] font-black tracking-widest">
+                            DEALER MANAGER
+                          </span>
+                        </td>
+                        <td className={`${tdClass} font-medium text-slate-700`}>Quản lý đại lý showroom</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read</td>
+                        <td className={`${tdClass} text-red-500 font-bold text-[12px]`}>✕ Restricted</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Confirm</td>
+                        <td className={`${tdClass} text-emerald-600 font-bold text-[12px]`}>✓ Read / Manage</td>
                       </tr>
-                      <tr>
-                        <td><span className="admin-badge-car">CUSTOMER / USER</span></td>
-                        <td>Khách hàng đăng ký tài khoản</td>
-                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
-                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
-                        <td><span style={{ color: '#9ca3af' }}>Chỉ xem đơn của mình</span></td>
-                        <td><span style={{ color: '#9ca3af' }}>Chỉ xem & đặt lịch</span></td>
+                      <tr className="group transition-colors">
+                        <td className={tdClass}>
+                          <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-md text-[11px] font-black tracking-widest">
+                            CUSTOMER / USER
+                          </span>
+                        </td>
+                        <td className={`${tdClass} font-medium text-slate-700`}>Khách hàng thành viên</td>
+                        <td className={`${tdClass} text-red-500 font-bold text-[12px]`}>✕ Restricted</td>
+                        <td className={`${tdClass} text-red-500 font-bold text-[12px]`}>✕ Restricted</td>
+                        <td className={`${tdClass} text-slate-400 font-medium text-[12px] italic`}>Chỉ xem đơn của mình</td>
+                        <td className={`${tdClass} text-slate-400 font-medium text-[12px] italic`}>Chỉ đặt & xem lịch</td>
                       </tr>
                     </tbody>
                   </table>
@@ -757,43 +819,36 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* ── MODAL THÊM / SỬA GÓI SUBSCRIPTION ── */}
+      {/* ── MODALS ── */}
+      {/* 1. Modal Thêm/Sửa Gói */}
       {showPkgModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
-          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyCenter: 'center', padding: '20px'
-        }}>
-          <div style={{
-            background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0',
-            width: '100%', maxWidth: '500px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', pb: '12px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-lg p-7 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
+              <h3 className="text-[18px] font-extrabold text-slate-900 tracking-tight">
                 {editingPkg ? 'Chỉnh sửa Gói Trải Nghiệm' : 'Thêm Gói Trải Nghiệm Mới'}
               </h3>
-              <button onClick={() => setShowPkgModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+              <button onClick={() => setShowPkgModal(false)} className="text-slate-400 hover:text-slate-700 transition-colors text-xl font-bold p-1">&times;</button>
             </div>
 
-            <form onSubmit={handleSavePkgSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleSavePkgSubmit} className="flex flex-col gap-4">
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Tên gói</label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tên gói</label>
                 <input
-                  type="text"
-                  required
+                  type="text" required
                   placeholder="VD: Track Performance Ultimate"
                   value={pkgForm.name}
                   onChange={(e) => setPkgForm({ ...pkgForm, name: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Dòng xe hỗ trợ</label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Dòng xe hỗ trợ</label>
                 <select
                   value={pkgForm.car}
                   onChange={(e) => setPkgForm({ ...pkgForm, car: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow bg-white"
                 >
                   <option value="Porsche 911 GT3 RS">Porsche 911 GT3 RS</option>
                   <option value="Porsche 911 GT3">Porsche 911 GT3</option>
@@ -801,57 +856,56 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Thời lượng</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="VD: 2 ngày (Trường đua)"
-                  value={pkgForm.duration}
-                  onChange={(e) => setPkgForm({ ...pkgForm, duration: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Thời lượng</label>
+                  <input
+                    type="text" required
+                    placeholder="VD: 2 ngày"
+                    value={pkgForm.duration}
+                    onChange={(e) => setPkgForm({ ...pkgForm, duration: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Giá niêm yết (VNĐ)</label>
+                  <input
+                    type="number" required
+                    placeholder="45000000"
+                    value={pkgForm.price}
+                    onChange={(e) => setPkgForm({ ...pkgForm, price: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow font-mono"
+                  />
+                </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Dịch vụ kèm theo</label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Dịch vụ kèm theo</label>
                 <input
                   type="text"
-                  placeholder="VD: Huấn luyện viên đua, Lốp chuyên dụng"
+                  placeholder="VD: HLV cá nhân, Video HD"
                   value={pkgForm.features}
                   onChange={(e) => setPkgForm({ ...pkgForm, features: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Giá niêm yết (VNĐ)</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="45000000"
-                  value={pkgForm.price}
-                  onChange={(e) => setPkgForm({ ...pkgForm, price: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Trạng thái</label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Trạng thái</label>
                 <select
                   value={pkgForm.status}
                   onChange={(e) => setPkgForm({ ...pkgForm, status: e.target.value })}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow bg-white font-semibold"
                 >
-                  <option value="Đang mở bán">Đang mở bán</option>
-                  <option value="Tạm ngưng">Tạm ngưng</option>
+                  <option value="Đang mở bán">Đang mở bán (Active)</option>
+                  <option value="Tạm ngưng">Tạm ngưng (Inactive)</option>
                 </select>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
-                <button type="button" onClick={() => setShowPkgModal(false)} className="admin-btn-refresh">Hủy</button>
-                <button type="submit" className="admin-btn-refresh" style={{ background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}>
-                  {editingPkg ? 'Lưu cập nhật' : 'Tạo gói mới'}
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+                <button type="button" onClick={() => setShowPkgModal(false)} className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-[14px] hover:bg-slate-50 transition-colors">Hủy bỏ</button>
+                <button type="submit" className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-bold text-[14px] hover:bg-red-700 transition-all shadow-md hover:shadow-lg active:scale-95">
+                  {editingPkg ? 'Lưu cập nhật' : 'Tạo mới gói'}
                 </button>
               </div>
             </form>
@@ -859,76 +913,56 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ══════════════════════════════
-          MODAL SỬA NGƯỜI DÙNG
-      ══════════════════════════════ */}
+      {/* 2. Modal Sửa User */}
       {showUserModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: '20px'
-        }}>
-          <div style={{
-            background: '#ffffff', borderRadius: '16px', padding: '32px',
-            width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-                ✏️ Chỉnh sửa người dùng
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-md p-7 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
+              <h3 className="text-[18px] font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                ✏️ Sửa thông tin tài khoản
               </h3>
-              <button onClick={() => setShowUserModal(false)} style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#64748b'
-              }}>✕</button>
+              <button onClick={() => setShowUserModal(false)} className="text-slate-400 hover:text-slate-700 transition-colors text-xl font-bold p-1">&times;</button>
             </div>
 
-            <form onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSaveUser} className="flex flex-col gap-4">
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
-                  Họ và tên
-                </label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Họ và tên</label>
                 <input
                   type="text"
                   value={userForm.fullName}
                   onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
-                  Email
-                </label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Email đăng nhập</label>
                 <input
                   type="email"
                   value={userForm.email}
-                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', background: '#f8fafc', color: '#64748b' }}
                   readOnly
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 font-mono text-[13px] outline-none cursor-not-allowed"
                 />
-                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0' }}>Email không thể thay đổi để bảo mật tài khoản</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Email định danh không thể thay đổi để bảo vệ tài khoản.</p>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
-                  Số điện thoại
-                </label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Số điện thoại</label>
                 <input
                   type="tel"
                   value={userForm.phone}
                   onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
                   placeholder="09xx xxx xxx"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow font-mono"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
-                  Quyền (Role)
-                </label>
+                <label className="block text-[12px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Quyền hạn (Role)</label>
                 <select
                   value={userForm.role}
                   onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-[14px] outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-shadow bg-white font-semibold"
                 >
                   <option value="user">CUSTOMER / USER — Khách hàng</option>
                   <option value="dealer_manager">DEALER MANAGER — Quản lý đại lý</option>
@@ -936,10 +970,10 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowUserModal(false)} className="admin-btn-refresh">Hủy</button>
-                <button type="submit" className="admin-btn-refresh" style={{ background: '#dc2626', color: '#fff', borderColor: '#dc2626' }}>
-                  💾 Lưu thay đổi
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+                <button type="button" onClick={() => setShowUserModal(false)} className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-[14px] hover:bg-slate-50 transition-colors">Hủy bỏ</button>
+                <button type="submit" className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-bold text-[14px] hover:bg-red-700 transition-all shadow-md hover:shadow-lg active:scale-95">
+                  Lưu thay đổi
                 </button>
               </div>
             </form>
