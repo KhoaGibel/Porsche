@@ -73,15 +73,15 @@ export default function AdminDashboard() {
       } 
       else if (activeMenu === 'users' && ability.can('read', 'User')) {
         const res = await adminAPI.getAllUsers();
-        setUsers(res.data || []);
+        setUsers(Array.isArray(res) ? res : res?.data || res || []);
       } 
       else if (activeMenu === 'orders' && ability.can('read', 'Order')) {
         const res = await adminAPI.getAllOrders();
-        setOrders(res.data || res || []);
+        setOrders(Array.isArray(res) ? res : res?.data || res || []);
       } 
       else if (activeMenu === 'testdrives' && ability.can('manage', 'TestDrive')) {
         const res = await adminAPI.getAllTestDrives();
-        setTestDrives(res.data || res || []);
+        setTestDrives(Array.isArray(res) ? res : res?.data || res || []);
       }
     } catch (error) {
       console.error(`Lỗi tải dữ liệu cho tab ${activeMenu}:`, error);
@@ -89,6 +89,72 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }, [activeMenu, ability]);
+
+  // ── Quản lý Gói Subscription (CRUD với LocalStorage) ──
+  const DEFAULT_PACKAGES = [
+    { id: 1, name: 'Standard Experience', car: 'Porsche 911 GT3', duration: '1 ngày (24 giờ)', features: 'Bảo hiểm tiêu chuẩn, Hướng dẫn viên', price: 15000000, status: 'Đang mở bán' },
+    { id: 2, name: 'Track Performance', car: 'Porsche 911 GT3 RS', duration: '2 ngày (Trường đua)', features: 'Huấn luyện viên đua F1, Lốp chuyên dụng, Quay video 4K', price: 45000000, status: 'Đang mở bán' },
+    { id: 3, name: 'Supercar Ultimate', car: 'Porsche 911 Turbo S', duration: '3 ngày', features: 'Giao xe tận nhà, Đồ uống VIP, Độc quyền sự kiện', price: 80000000, status: 'Đang mở bán' },
+  ];
+
+  const [packages, setPackages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('porsche_admin_packages');
+      return saved ? JSON.parse(saved) : DEFAULT_PACKAGES;
+    } catch {
+      return DEFAULT_PACKAGES;
+    }
+  });
+
+  const [showPkgModal, setShowPkgModal] = useState(false);
+  const [editingPkg, setEditingPkg] = useState(null);
+  const [pkgForm, setPkgForm] = useState({
+    name: '', car: 'Porsche 911 GT3 RS', duration: '', features: '', price: '', status: 'Đang mở bán'
+  });
+
+  const savePackagesToStorage = (updatedList) => {
+    setPackages(updatedList);
+    localStorage.setItem('porsche_admin_packages', JSON.stringify(updatedList));
+  };
+
+  const handleOpenAddPkg = () => {
+    setEditingPkg(null);
+    setPkgForm({ name: '', car: 'Porsche 911 GT3 RS', duration: '', features: '', price: '', status: 'Đang mở bán' });
+    setShowPkgModal(true);
+  };
+
+  const handleOpenEditPkg = (pkg) => {
+    setEditingPkg(pkg);
+    setPkgForm({ ...pkg });
+    setShowPkgModal(true);
+  };
+
+  const handleDeletePkg = (pkgId) => {
+    if (!window.confirm('Bạn có chắc muốn xóa gói trải nghiệm này?')) return;
+    const updated = packages.filter(p => p.id !== pkgId);
+    savePackagesToStorage(updated);
+  };
+
+  const handleSavePkgSubmit = (e) => {
+    e.preventDefault();
+    if (!pkgForm.name || !pkgForm.price) {
+      alert('Vui lòng điền đầy đủ tên gói và giá!');
+      return;
+    }
+
+    if (editingPkg) {
+      const updated = packages.map(p => p.id === editingPkg.id ? { ...p, ...pkgForm, price: Number(pkgForm.price) } : p);
+      savePackagesToStorage(updated);
+    } else {
+      const newPkg = {
+        id: Date.now(),
+        ...pkgForm,
+        price: Number(pkgForm.price)
+      };
+      savePackagesToStorage([...packages, newPkg]);
+    }
+    setShowPkgModal(false);
+  };
 
   useEffect(() => {
     fetchData();
@@ -517,7 +583,7 @@ export default function AdminDashboard() {
           </Can>
         )}
 
-        {/* ── 6. GÓI SUBSCRIPTION ── */}
+        {/* ── 6. GÓI SUBSCRIPTION (HỖ TRỢ THÊM / SỬA / XÓA) ── */}
         {activeMenu === 'shop' && (
           <Can do="manage" on="Shop">
             <div className="admin-content">
@@ -527,6 +593,9 @@ export default function AdminDashboard() {
                     <h2 className="admin-section-title">Quản lý Gói Trải Nghiệm & Subscription</h2>
                     <p className="admin-section-desc">Danh sách các gói đăng ký trải nghiệm xe Porsche.</p>
                   </div>
+                  <button onClick={handleOpenAddPkg} className="admin-btn-refresh" style={{ background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}>
+                    ➕ Thêm gói mới
+                  </button>
                 </div>
 
                 <div className="admin-table-wrap">
@@ -539,33 +608,34 @@ export default function AdminDashboard() {
                         <th>Dịch vụ kèm theo</th>
                         <th>Giá niêm yết</th>
                         <th>Trạng thái</th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td><strong>Standard Experience</strong></td>
-                        <td>Porsche 911 GT3</td>
-                        <td>1 ngày (24 giờ)</td>
-                        <td>Bảo hiểm tiêu chuẩn, Hướng dẫn viên</td>
-                        <td className="admin-td-amount">15.000.000 ₫</td>
-                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>Track Performance</strong></td>
-                        <td>Porsche 911 GT3 RS</td>
-                        <td>2 ngày (Trường đua)</td>
-                        <td>Huấn luyện viên đua F1, Lốp chuyên dụng, Quay video 4K</td>
-                        <td className="admin-td-amount">45.000.000 ₫</td>
-                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>Supercar Ultimate</strong></td>
-                        <td>Porsche 911 Turbo S</td>
-                        <td>3 ngày</td>
-                        <td>Giao xe tận nhà, Đồ uống VIP, Độc quyền sự kiện</td>
-                        <td className="admin-td-amount">80.000.000 ₫</td>
-                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
-                      </tr>
+                      {packages.length === 0 ? (
+                        <tr><td colSpan="7" className="admin-empty-state">Chưa có gói trải nghiệm nào. Bấm nút Thêm gói mới để tạo.</td></tr>
+                      ) : (
+                        packages.map((p) => (
+                          <tr key={p.id}>
+                            <td><strong>{p.name}</strong></td>
+                            <td><span className="admin-badge-car">{p.car}</span></td>
+                            <td>{p.duration}</td>
+                            <td style={{ maxWidth: '220px', fontSize: '13px' }}>{p.features}</td>
+                            <td className="admin-td-amount">{Number(p.price).toLocaleString('vi-VN')} ₫</td>
+                            <td>
+                              <span className="admin-status" style={{ color: p.status === 'Đang mở bán' ? '#16a34a' : '#dc2626', background: p.status === 'Đang mở bán' ? '#f0fdf4' : '#fef2f2' }}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => handleOpenEditPkg(p)} className="btn-outline-success">✏️ Sửa</button>
+                                <button onClick={() => handleDeletePkg(p.id)} className="btn-outline-danger">🗑️ Xóa</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -631,6 +701,108 @@ export default function AdminDashboard() {
           </Can>
         )}
       </main>
+
+      {/* ── MODAL THÊM / SỬA GÓI SUBSCRIPTION ── */}
+      {showPkgModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyCenter: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0',
+            width: '100%', maxWidth: '500px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', pb: '12px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>
+                {editingPkg ? 'Chỉnh sửa Gói Trải Nghiệm' : 'Thêm Gói Trải Nghiệm Mới'}
+              </h3>
+              <button onClick={() => setShowPkgModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+
+            <form onSubmit={handleSavePkgSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Tên gói</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="VD: Track Performance Ultimate"
+                  value={pkgForm.name}
+                  onChange={(e) => setPkgForm({ ...pkgForm, name: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Dòng xe hỗ trợ</label>
+                <select
+                  value={pkgForm.car}
+                  onChange={(e) => setPkgForm({ ...pkgForm, car: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                >
+                  <option value="Porsche 911 GT3 RS">Porsche 911 GT3 RS</option>
+                  <option value="Porsche 911 GT3">Porsche 911 GT3</option>
+                  <option value="Porsche 911 Turbo S">Porsche 911 Turbo S</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Thời lượng</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="VD: 2 ngày (Trường đua)"
+                  value={pkgForm.duration}
+                  onChange={(e) => setPkgForm({ ...pkgForm, duration: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Dịch vụ kèm theo</label>
+                <input
+                  type="text"
+                  placeholder="VD: Huấn luyện viên đua, Lốp chuyên dụng"
+                  value={pkgForm.features}
+                  onChange={(e) => setPkgForm({ ...pkgForm, features: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Giá niêm yết (VNĐ)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="45000000"
+                  value={pkgForm.price}
+                  onChange={(e) => setPkgForm({ ...pkgForm, price: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', mb: '4px' }}>Trạng thái</label>
+                <select
+                  value={pkgForm.status}
+                  onChange={(e) => setPkgForm({ ...pkgForm, status: e.target.value })}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                >
+                  <option value="Đang mở bán">Đang mở bán</option>
+                  <option value="Tạm ngưng">Tạm ngưng</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+                <button type="button" onClick={() => setShowPkgModal(false)} className="admin-btn-refresh">Hủy</button>
+                <button type="submit" className="admin-btn-refresh" style={{ background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}>
+                  {editingPkg ? 'Lưu cập nhật' : 'Tạo gói mới'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
