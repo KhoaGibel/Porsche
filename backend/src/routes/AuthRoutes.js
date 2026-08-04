@@ -1,7 +1,7 @@
 // src/routes/authRoutes.js
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, firebaseSync, getMe } from '../controllers/AuthController.js';
+import { register, login, firebaseSync, getMe, adminLogin, adminSetup } from '../controllers/AuthController.js';
 import { protect } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validate.js';
 
@@ -25,6 +25,12 @@ router.post('/login',
   validateRequest,
   login
 );
+
+// Đăng nhập Admin thật qua backend (email + password trong MongoDB)
+router.post('/admin-login', adminLogin);
+
+// Khởi tạo tài khoản Admin lần đầu (bảo vệ bằng setupSecret)
+router.post('/admin-setup', adminSetup);
 
 // Đồng bộ user Firebase (Google/Facebook) vào MongoDB
 router.post('/firebase-sync', firebaseSync);

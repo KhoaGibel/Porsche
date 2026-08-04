@@ -12,6 +12,8 @@ import { auth, googleProvider, facebookProvider } from '../firebase';
 import { authAPI, saveToken, clearToken } from '../services/api';
 import useCarStore from '../store/useCarStore';
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+
 export function useAuth() {
   const [user, setUser]       = useState(null); 
   const [loading, setLoading] = useState(true);
@@ -19,41 +21,8 @@ export function useAuth() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // KIỂM TRA FAKE ADMIN TỪ LOCAL STORAGE
-      if (localStorage.getItem('isFakeAdmin') === 'true') {
-        const adminData = {
-          id: 'admin-id-123',
-          uid: 'admin-id-123',
-          email: 'admin@porsche.local',
-          fullName: 'Super Admin',
-          role: 'admin',
-          displayName: 'Super Admin'
-        };
-        setUser(adminData);
-        useCarStore.getState().setUser(adminData);
-        setLoading(false);
-        return;
-      }
-
-      setUser(firebaseUser);
-
       if (firebaseUser) {
-        
-        // 1. ĐẶC QUYỀN CHO SUPER ADMIN: BỎ QUA BACKEND!
-        if (firebaseUser.email === 'admin@porsche.local') {
-          useCarStore.getState().setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            fullName: firebaseUser.displayName || 'Super Admin',
-            avatar: firebaseUser.photoURL,
-            role: 'admin' 
-          });
-          setLoading(false);
-          return;
-        }
-
-
-        // 2. LUỒNG BÌNH THƯỜNG CHO KHÁCH HÀNG / QUẢN LÝ
+        // Luồng bình thường cho khách hàng qua Firebase
         try {
           const providerId = firebaseUser.providerData[0]?.providerId ?? 'password';
           const provider =
@@ -69,29 +38,48 @@ export function useAuth() {
             provider,
           });
 
-          // Lưu token và lấy Role do Backend quyết định
           if (res?.token) saveToken(res.token);
-          useCarStore.getState().setUser(res?.user || {
+          const userData = res?.user || {
             id: firebaseUser.uid,
             email: firebaseUser.email,
             fullName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
             avatar: firebaseUser.photoURL,
             role: 'user'
-          });
+          };
+          setUser(userData);
+          useCarStore.getState().setUser(userData);
         } catch (err) {
           console.error('Đồng bộ tài khoản với server thất bại, sử dụng fallback cục bộ:', err);
-          // Fallback khi server offline / chập chờn
-          useCarStore.getState().setUser({
+          const fallback = {
             id: firebaseUser.uid,
             email: firebaseUser.email,
             fullName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
             avatar: firebaseUser.photoURL,
             role: 'user'
-          });
+          };
+          setUser(fallback);
+          useCarStore.getState().setUser(fallback);
         }
       } else {
-        clearToken();
-        useCarStore.getState().setUser(null);
+        // Không có Firebase user — kiểm tra xem có token backend không (admin login)
+        const token = localStorage.getItem('porsche_token');
+        const savedUser = localStorage.getItem('porsche_admin_user');
+        if (token && savedUser) {
+          try {
+            const userData = JSON.parse(savedUser);
+            setUser(userData);
+            useCarStore.getState().setUser(userData);
+          } catch {
+            clearToken();
+            localStorage.removeItem('porsche_admin_user');
+            setUser(null);
+            useCarStore.getState().setUser(null);
+          }
+        } else {
+          clearToken();
+          setUser(null);
+          useCarStore.getState().setUser(null);
+        }
       }
 
       setLoading(false);
@@ -119,20 +107,35 @@ export function useAuth() {
   const login = async ({ email, password }) => {
     try {
       setError(null);
-      // Hỗ trợ đăng nhập Super Admin cục bộ
-      if (email === 'admin@porsche.local') {
-        const adminData = {
-          id: 'admin-id-123',
-          email: 'admin@porsche.local',
-          fullName: 'Super Admin',
-          role: 'admin'
+
+      // Luồng đặc biệt cho Admin: đăng nhập thẳng qua backend MongoDB (không qua Firebase)
+      if (email.endsWith('@porsche.local') || email === 'admin@porsche.vn') {
+        const res = await fetch(`${BASE_URL}/auth/admin-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message || 'Đăng nhập thất bại.');
+          return { success: false };
+        }
+
+        if (data.token) saveToken(data.token);
+
+        const adminUserData = {
+          ...data.user,
+          displayName: data.user.fullName,
         };
-        setUser(adminData);
-        useCarStore.getState().setUser(adminData);
-        localStorage.setItem('isFakeAdmin', 'true');
+        setUser(adminUserData);
+        useCarStore.getState().setUser(adminUserData);
+        // Lưu thông tin admin để khôi phục session khi reload
+        localStorage.setItem('porsche_admin_user', JSON.stringify(adminUserData));
         return { success: true };
       }
 
+      // Luồng bình thường cho khách hàng: Firebase
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (err) {
@@ -169,8 +172,10 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    localStorage.removeItem('isFakeAdmin');
     clearToken();
+    localStorage.removeItem('porsche_admin_user');
+    // Xóa isFakeAdmin cũ nếu còn
+    localStorage.removeItem('isFakeAdmin');
     setUser(null);
     useCarStore.getState().setUser(null);
     try {

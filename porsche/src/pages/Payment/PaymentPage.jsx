@@ -7,34 +7,88 @@ import { paymentAPI } from '../../services/api';
 import { PLANS, INSURANCE, fmt, TIME_SLOTS, SHOWROOMS } from '../../data/testDrivePlans';
 import './PaymentPage.css';
  
+// SVG logos inline cho các phương thức thanh toán
+const LOGOS = {
+  momo: (
+    <svg viewBox="0 0 50 50" width="32" height="32">
+      <circle cx="25" cy="25" r="25" fill="#A50064"/>
+      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily="Arial">M</text>
+    </svg>
+  ),
+  vnpay: (
+    <svg viewBox="0 0 80 30" width="56" height="22">
+      <rect width="80" height="30" rx="4" fill="#005BAC"/>
+      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" fontFamily="Arial">VNPAY</text>
+    </svg>
+  ),
+  atm: (
+    <svg viewBox="0 0 50 50" width="32" height="32">
+      <rect width="50" height="50" rx="6" fill="#1a56db"/>
+      <rect x="5" y="15" width="40" height="7" rx="2" fill="white" opacity="0.9"/>
+      <rect x="5" y="27" width="12" height="4" rx="1" fill="white" opacity="0.7"/>
+      <rect x="20" y="27" width="12" height="4" rx="1" fill="white" opacity="0.7"/>
+    </svg>
+  ),
+  visa: (
+    <svg viewBox="0 0 80 30" width="56" height="22">
+      <rect width="80" height="30" rx="4" fill="#1a1a2e"/>
+      <text x="22" y="20" fill="#FFD700" fontSize="16" fontWeight="bold" fontFamily="Arial" fontStyle="italic">VISA</text>
+      <circle cx="58" cy="15" r="9" fill="#EB001B" opacity="0.9"/>
+      <circle cx="67" cy="15" r="9" fill="#F79E1B" opacity="0.9"/>
+      <ellipse cx="62.5" cy="15" rx="4" ry="9" fill="#FF5F00" opacity="0.9"/>
+    </svg>
+  ),
+  cash: (
+    <svg viewBox="0 0 50 50" width="32" height="32">
+      <rect width="50" height="50" rx="6" fill="#059669"/>
+      <rect x="7" y="16" width="36" height="18" rx="3" fill="white" opacity="0.9"/>
+      <circle cx="25" cy="25" r="6" fill="#059669" opacity="0.8"/>
+      <rect x="13" y="21" width="8" height="2" rx="1" fill="#059669" opacity="0.5"/>
+      <rect x="29" y="27" width="8" height="2" rx="1" fill="#059669" opacity="0.5"/>
+    </svg>
+  ),
+};
+
 const PAYMENT_METHODS = [
   {
     id: 'momo',
     name: 'MoMo',
-    logo: '💜',
+    logo: LOGOS.momo,
     desc: 'Ví điện tử MoMo',
-    color: '#ae2070',
+    color: '#A50064',
+    hint: 'Sau khi xác nhận, bạn sẽ được chuyển đến ứng dụng MoMo để hoàn tất thanh toán.',
   },
   {
     id: 'vnpay',
     name: 'VNPay',
-    logo: '🔴',
+    logo: LOGOS.vnpay,
     desc: 'Cổng thanh toán VNPay',
-    color: '#e31837',
+    color: '#005BAC',
+    hint: 'Hỗ trợ tất cả ngân hàng nội địa qua cổng VNPay.',
   },
   {
     id: 'atm',
     name: 'Thẻ ATM / Internet Banking',
-    logo: '🏦',
+    logo: LOGOS.atm,
     desc: 'Tất cả ngân hàng nội địa',
     color: '#1a56db',
+    hint: 'Chuyển khoản qua ứng dụng ngân hàng hoặc Internet Banking.',
   },
   {
     id: 'visa',
     name: 'Visa / Mastercard',
-    logo: '💳',
+    logo: LOGOS.visa,
     desc: 'Thẻ quốc tế Visa & Mastercard',
     color: '#1a1a2e',
+    hint: 'Thanh toán bảo mật bằng thẻ quốc tế Visa hoặc Mastercard.',
+  },
+  {
+    id: 'cash',
+    name: 'Tiền mặt tại Showroom',
+    logo: LOGOS.cash,
+    desc: 'Thanh toán trực tiếp khi đến nhận xe',
+    color: '#059669',
+    hint: 'Bạn sẽ thanh toán tiền mặt trực tiếp tại Showroom Porsche vào ngày lái thử.',
   },
 ];
  
@@ -445,13 +499,20 @@ export default function PaymentPage() {
               )}
             </AnimatePresence>
  
+            {/* Cash info */}
+            {payMethod === 'cash' && (
+              <div className="pay-atm-note" style={{ background: '#f0fdf4', borderColor: '#a7f3d0' }}>
+                <p>🏪 Bạn sẽ thanh toán <strong>tiền mặt trực tiếp tại Showroom Porsche</strong> vào ngày lái thử. Đội ngũ chúng tôi sẽ liên hệ xác nhận trước 24h.</p>
+              </div>
+            )}
+
             {/* ATM info */}
             {payMethod === 'atm' && (
               <div className="pay-atm-note">
                 <p>🏦 Sau khi xác nhận, bạn sẽ được chuyển đến cổng thanh toán ngân hàng để hoàn tất giao dịch.</p>
               </div>
             )}
- 
+
             {/* Momo / VNPay info */}
             {(payMethod === 'momo' || payMethod === 'vnpay') && (
               <div className="pay-atm-note">
@@ -461,7 +522,7 @@ export default function PaymentPage() {
               </div>
             )}
           </div>
- 
+
         </div>
  
         {/* ══════════════════════════════
