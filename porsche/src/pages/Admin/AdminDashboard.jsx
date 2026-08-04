@@ -346,6 +346,177 @@ export default function AdminDashboard() {
             </div>
           </Can>
         )}
+
+        {/* ── 5. QUẢN LÝ XE ── */}
+        {activeMenu === 'cars' && (
+          <Can do="manage" on="Car">
+            <div className="admin-content">
+              <div className="admin-section">
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Danh mục Dòng xe</h2>
+                    <p className="admin-section-desc">Cấu hình thông số và màu sắc các mẫu xe Showroom 3D.</p>
+                  </div>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Tên dòng xe</th>
+                        <th>Động cơ / Mã lực</th>
+                        <th>Tốc độ tối đa</th>
+                        <th>Tăng tốc (0-100km/h)</th>
+                        <th>Giá niêm yết</th>
+                        <th>Trạng thái 3D</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Porsche 911 GT3 RS</strong></td>
+                        <td>4.0L Atmospheric / 525 HP</td>
+                        <td>296 km/h</td>
+                        <td>3.2s</td>
+                        <td className="admin-td-amount">15.830.000.000 ₫</td>
+                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Porsche 911 GT3</strong></td>
+                        <td>4.0L Flat-6 / 510 HP</td>
+                        <td>318 km/h</td>
+                        <td>3.4s</td>
+                        <td className="admin-td-amount">13.600.000.000 ₫</td>
+                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Porsche 911 Turbo S</strong></td>
+                        <td>3.8L Twin-Turbo / 650 HP</td>
+                        <td>330 km/h</td>
+                        <td>2.7s</td>
+                        <td className="admin-td-amount">17.380.000.000 ₫</td>
+                        <td><span className="admin-badge-car">Sẵn sàng (Active)</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Can>
+        )}
+
+        {/* ── 6. GÓI SUBSCRIPTION ── */}
+        {activeMenu === 'shop' && (
+          <Can do="manage" on="Shop">
+            <div className="admin-content">
+              <div className="admin-section">
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Quản lý Gói Trải Nghiệm & Subscription</h2>
+                    <p className="admin-section-desc">Danh sách các gói đăng ký trải nghiệm xe Porsche.</p>
+                  </div>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Tên gói</th>
+                        <th>Dòng xe hỗ trợ</th>
+                        <th>Thời lượng</th>
+                        <th>Dịch vụ kèm theo</th>
+                        <th>Giá niêm yết</th>
+                        <th>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Standard Experience</strong></td>
+                        <td>Porsche 911 GT3</td>
+                        <td>1 ngày (24 giờ)</td>
+                        <td>Bảo hiểm tiêu chuẩn, Hướng dẫn viên</td>
+                        <td className="admin-td-amount">15.000.000 ₫</td>
+                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Track Performance</strong></td>
+                        <td>Porsche 911 GT3 RS</td>
+                        <td>2 ngày (Trường đua)</td>
+                        <td>Huấn luyện viên đua F1, Lốp chuyên dụng, Quay video 4K</td>
+                        <td className="admin-td-amount">45.000.000 ₫</td>
+                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Supercar Ultimate</strong></td>
+                        <td>Porsche 911 Turbo S</td>
+                        <td>3 ngày</td>
+                        <td>Giao xe tận nhà, Đồ uống VIP, Độc quyền sự kiện</td>
+                        <td className="admin-td-amount">80.000.000 ₫</td>
+                        <td><span className="admin-status" style={{ color: '#059669', background: '#05966920' }}>Đang mở bán</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Can>
+        )}
+
+        {/* ── 7. PHÂN QUYỀN HỆ THỐNG ── */}
+        {activeMenu === 'roles' && (
+          <Can do="manage" on="all">
+            <div className="admin-content">
+              <div className="admin-section">
+                <div className="admin-section-header">
+                  <div>
+                    <h2 className="admin-section-title">Phân Quyền Vai Trò (Ma Trận CASL / RBAC)</h2>
+                    <p className="admin-section-desc">Cấu hình quyền hạn truy cập các chức năng cho từng cấp độ người dùng.</p>
+                  </div>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Vai trò (Role)</th>
+                        <th>Mô tả cấp bậc</th>
+                        <th>Quyền Dashboard</th>
+                        <th>Quyền Quản lý User</th>
+                        <th>Quyền Đơn hàng</th>
+                        <th>Quyền Lịch lái thử / Car</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span className="admin-badge-car admin-role-admin">SUPER ADMIN</span></td>
+                        <td>Quản trị viên toàn quyền hệ thống</td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                      </tr>
+                      <tr>
+                        <td><span className="admin-badge-car" style={{ background: '#3b82f620', color: '#60a5fa' }}>DEALER MANAGER</span></td>
+                        <td>Quản lý đại lý showroom</td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read</span></td>
+                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Confirm</span></td>
+                        <td><span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Read / Manage</span></td>
+                      </tr>
+                      <tr>
+                        <td><span className="admin-badge-car">CUSTOMER / USER</span></td>
+                        <td>Khách hàng đăng ký tài khoản</td>
+                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
+                        <td><span style={{ color: '#dc2626' }}>✕ Restricted</span></td>
+                        <td><span style={{ color: '#9ca3af' }}>Chỉ xem đơn của mình</span></td>
+                        <td><span style={{ color: '#9ca3af' }}>Chỉ xem & đặt lịch</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Can>
+        )}
       </main>
     </div>
   );
