@@ -16,8 +16,27 @@ const MENU_ITEMS = [
   { id: 'roles',      label: 'Phân quyền',       icon: '🔐', action: 'manage', subject: 'all'       },
 ];
 
-const ROLE_COLORS = { confirmed: '#059669', pending: '#d97706', cancelled: '#dc2626' }; // Đã tinh chỉnh màu cho sáng sủa hơn
-const ROLE_LABELS = { confirmed: 'Đã xác nhận', pending: 'Chờ duyệt', cancelled: 'Đã hủy' };
+const ROLE_COLORS = { 
+  confirmed: '#059669', 
+  paid: '#10b981', 
+  upcoming: '#3b82f6', 
+  pending: '#d97706', 
+  pending_payment: '#f59e0b', 
+  awaiting_cash: '#f97316', 
+  cancelled: '#dc2626', 
+  completed: '#6366f1' 
+};
+
+const ROLE_LABELS = { 
+  confirmed: 'Đã xác nhận', 
+  paid: 'Đã thanh toán', 
+  upcoming: '⚡ Sắp tới (Lái thử)', 
+  pending: 'Chờ duyệt', 
+  pending_payment: 'Chờ thanh toán', 
+  awaiting_cash: 'Chờ thu tiền mặt', 
+  cancelled: 'Đã hủy', 
+  completed: 'Hoàn thành' 
+};
 
 export default function AdminDashboard() {
   const ability   = useAbility();
@@ -30,6 +49,16 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [testDrives, setTestDrives] = useState([]);
+
+  // Quản lý các ID đơn hàng bị Ẩn (Soft Delete — Không xóa khỏi CSDL)
+  const [hiddenOrderIds, setHiddenOrderIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('porsche_admin_hidden_orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const visibleMenu = MENU_ITEMS.filter(item =>
     ability.can(item.action, item.subject)
@@ -48,11 +77,11 @@ export default function AdminDashboard() {
       } 
       else if (activeMenu === 'orders' && ability.can('read', 'Order')) {
         const res = await adminAPI.getAllOrders();
-        setOrders(res.data || []);
+        setOrders(res.data || res || []);
       } 
       else if (activeMenu === 'testdrives' && ability.can('manage', 'TestDrive')) {
         const res = await adminAPI.getAllTestDrives();
-        setTestDrives(res.data || res);
+        setTestDrives(res.data || res || []);
       }
     } catch (error) {
       console.error(`Lỗi tải dữ liệu cho tab ${activeMenu}:`, error);
@@ -70,7 +99,7 @@ export default function AdminDashboard() {
   }
 
   const handleUpdateStatus = async (id, newStatus) => {
-    if(!window.confirm(`Xác nhận chuyển trạng thái thành: ${ROLE_LABELS[newStatus]}?`)) return;
+    if(!window.confirm(`Xác nhận chuyển trạng thái thành: ${ROLE_LABELS[newStatus] || newStatus}?`)) return;
     try {
       await adminAPI.updateTestDriveStatus(id, newStatus);
       fetchData();
@@ -78,6 +107,38 @@ export default function AdminDashboard() {
       alert('Có lỗi xảy ra khi cập nhật trạng thái!');
     }
   };
+
+  // Hàm ẩn đơn hàng (Soft Delete không ảnh hưởng tới DB)
+  const handleHideOrder = (orderId) => {
+    if (!window.confirm('Bạn có chắc muốn ẩn đơn hàng này khỏi danh sách Admin?\n(Lưu ý: Thao tác này chỉ ẩn trên danh sách, dữ liệu trong CSDL MySQL hoàn toàn được giữ nguyên).')) return;
+    const updated = [...hiddenOrderIds, orderId];
+    setHiddenOrderIds(updated);
+    localStorage.setItem('porsche_admin_hidden_orders', JSON.stringify(updated));
+  };
+
+  const handleResetHiddenOrders = () => {
+    setHiddenOrderIds([]);
+    localStorage.removeItem('porsche_admin_hidden_orders');
+  };
+
+  // Tính toán tự động trạng thái 'Sắp tới' dựa trên ngày chạy thử
+  const getEffectiveOrderStatus = (order) => {
+    if (order.status === 'cancelled' || order.status === 'completed') return order.status;
+    if (order.driveDate) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const target = new Date(order.driveDate);
+      target.setHours(0,0,0,0);
+      const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays <= 3) {
+        return 'upcoming';
+      }
+    }
+    return order.status;
+  };
+
+  // Lọc các đơn không bị ẩn
+  const displayOrders = orders.filter(o => !hiddenOrderIds.includes(o.id));
 
   return (
     <div className="admin-layout">
@@ -231,10 +292,17 @@ export default function AdminDashboard() {
               <div className="admin-section">
                 <div className="admin-section-header">
                   <div>
-                    <h2 className="admin-section-title">Quản lý Thanh toán</h2>
-                    <p className="admin-section-desc">Giao dịch mua xe, cọc xe và nâng cấp gói.</p>
+                    <h2 className="admin-section-title">Quản lý Đơn Hàng & Lái Thử</h2>
+                    <p className="admin-section-desc">Theo dõi đơn hàng, chuyển trạng thái và quản lý danh sách.</p>
                   </div>
-                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    {hiddenOrderIds.length > 0 && (
+                      <button onClick={handleResetHiddenOrders} className="admin-btn-refresh" style={{ borderColor: '#ef4444', color: '#ef4444' }}>
+                        👁️ Hiện {hiddenOrderIds.length} đơn đã ẩn
+                      </button>
+                    )}
+                    <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                  </div>
                 </div>
 
                 <div className="admin-table-wrap">
@@ -243,32 +311,77 @@ export default function AdminDashboard() {
                       <tr>
                         <th>Mã đơn (ID)</th>
                         <th>Khách hàng</th>
-                        <th>Sản phẩm/Gói</th>
+                        <th>Sản phẩm / Gói</th>
                         <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày thanh toán</th>
+                        <th>Ngày lái thử</th>
+                        <th>Chuyển Trạng thái</th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="6" className="admin-empty-state">Đang tải dữ liệu Thanh toán...</td></tr>
-                      ) : orders.length === 0 ? (
-                        <tr><td colSpan="6" className="admin-empty-state">Chưa có giao dịch nào.</td></tr>
+                        <tr><td colSpan="7" className="admin-empty-state">Đang tải dữ liệu Thanh toán...</td></tr>
+                      ) : displayOrders.length === 0 ? (
+                        <tr><td colSpan="7" className="admin-empty-state">Chưa có giao dịch nào (hoặc đã ẩn toàn bộ).</td></tr>
                       ) : (
-                        orders.map((o) => (
-                          <tr key={o.id}>
-                            <td className="admin-td-mono">{o.orderId}</td>
-                            <td><strong>{o.customerName}</strong></td>
-                            <td><span className="admin-badge-plan">{o.productName}</span></td>
-                            <td className="admin-td-amount">{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
-                            <td>
-                              <span className="admin-status" style={{ color: ROLE_COLORS[o.status], background: ROLE_COLORS[o.status] + '20' }}>
-                                {ROLE_LABELS[o.status] || o.status}
-                              </span>
-                            </td>
-                            <td className="admin-td-mono">{new Date(o.paymentDate).toLocaleString('vi-VN')}</td>
-                          </tr>
-                        ))
+                        displayOrders.map((o) => {
+                          const statusKey = getEffectiveOrderStatus(o);
+                          return (
+                            <tr key={o.id}>
+                              <td className="admin-td-mono">#{o.orderId}</td>
+                              <td>
+                                <strong>{o.customerName}</strong><br/>
+                                <span style={{ fontSize: '11px', color: '#9ca3af' }}>{o.phone || o.showroom}</span>
+                              </td>
+                              <td><span className="admin-badge-plan">{o.productName || 'Porsche Plan'}</span></td>
+                              <td className="admin-td-amount">{Number(o.amount).toLocaleString('vi-VN')} ₫</td>
+                              <td className="admin-td-mono">
+                                {o.driveDate ? (
+                                  <div>
+                                    <span style={{ color: statusKey === 'upcoming' ? '#3b82f6' : '#e5e7eb', fontWeight: statusKey === 'upcoming' ? 'bold' : 'normal' }}>
+                                      {new Date(o.driveDate).toLocaleDateString('vi-VN')}
+                                    </span>
+                                    {o.driveTime && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{o.driveTime}</div>}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: '#6b7280' }}>Chưa xếp ngày</span>
+                                )}
+                              </td>
+                              <td>
+                                <select
+                                  value={statusKey}
+                                  onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                                  style={{
+                                    background: 'rgba(255,255,255,0.06)',
+                                    color: ROLE_COLORS[statusKey] || '#ffffff',
+                                    border: `1px solid ${ROLE_COLORS[statusKey] || 'rgba(255,255,255,0.1)'}`,
+                                    borderRadius: '8px',
+                                    padding: '6px 10px',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <option value="pending_payment" style={{ background: '#121212', color: '#f59e0b' }}>Chờ thanh toán</option>
+                                  <option value="awaiting_cash" style={{ background: '#121212', color: '#f97316' }}>Chờ thu tiền mặt</option>
+                                  <option value="paid" style={{ background: '#121212', color: '#10b981' }}>Đã thanh toán</option>
+                                  <option value="upcoming" style={{ background: '#121212', color: '#3b82f6' }}>⚡ Sắp tới (Lái thử)</option>
+                                  <option value="completed" style={{ background: '#121212', color: '#6366f1' }}>Hoàn thành</option>
+                                  <option value="cancelled" style={{ background: '#121212', color: '#ef4444' }}>Đã hủy</option>
+                                </select>
+                              </td>
+                              <td>
+                                <button 
+                                  onClick={() => handleHideOrder(o.id)}
+                                  className="btn-outline-danger"
+                                  title="Ẩn đơn khỏi giao diện (Giữ nguyên CSDL)"
+                                >
+                                  🗑️ Xóa (Ẩn)
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

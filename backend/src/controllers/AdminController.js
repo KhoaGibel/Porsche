@@ -72,6 +72,10 @@ export const getAllOrders = async (req, res) => {
       amount: o.total_amount,
       status: o.status,
       paymentDate: o.created_at,
+      driveDate: o.drive_date,
+      driveTime: o.drive_time,
+      showroom: o.showroom,
+      phone: o.phone
     }));
 
     res.status(200).json(mappedOrders);
