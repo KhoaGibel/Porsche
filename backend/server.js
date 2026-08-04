@@ -16,8 +16,32 @@ const PORT = process.env.PORT ?? 5000;
 
 await connectDB();
 
-app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173', credentials: true }));
+// ── Danh sách origin được phép (thêm domain Vercel của bạn vào đây) ──
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://porsche-rlrd.vercel.app',
+  // Thêm preview URLs của Vercel
+  /^https:\/\/porsche.*\.vercel\.app$/,
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Cho phép request không có origin (curl, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    const allowed = ALLOWED_ORIGINS.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json({ limit: '10kb' }));
+
 
 // ── Chống SPAM / Rate Limiting ──
 // 1. Global Limiter (Áp dụng chung): Tối đa 150 request / 1 phút / IP
