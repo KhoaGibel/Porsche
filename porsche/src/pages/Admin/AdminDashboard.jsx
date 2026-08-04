@@ -60,6 +60,11 @@ export default function AdminDashboard() {
     }
   });
 
+  // ── Modal Sửa User ──
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userForm, setUserForm] = useState({ fullName: '', email: '', role: 'user', phone: '' });
+
   const visibleMenu = MENU_ITEMS.filter(item =>
     ability.can(item.action, item.subject)
   );
@@ -187,6 +192,28 @@ export default function AdminDashboard() {
     localStorage.removeItem('porsche_admin_hidden_orders');
   };
 
+  // ── Handlers cho User CRUD ──
+  const handleOpenEditUser = (u) => {
+    setEditingUser(u);
+    setUserForm({ fullName: u.fullName || '', email: u.email || '', role: u.role || 'user', phone: u.phone || '' });
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    // Cập nhật local state (frontend-only vì chưa có endpoint PUT /admin/users/:id)
+    setUsers(prev => prev.map(u =>
+      u._id === editingUser._id ? { ...u, ...userForm } : u
+    ));
+    setShowUserModal(false);
+    alert('✅ Đã cập nhật thông tin người dùng!');
+  };
+
+  const handleDeleteUser = (u) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa tài khoản "${u.fullName || u.email}" khỏi danh sách?\n(Chỉ ẩn khỏi giao diện, dữ liệu MongoDB vẫn được giữ nguyên)`)) return;
+    setUsers(prev => prev.filter(user => user._id !== u._id));
+  };
+
   // Tính toán tự động trạng thái 'Sắp tới' dựa trên ngày chạy thử
   const getEffectiveOrderStatus = (order) => {
     if (order.status === 'cancelled' || order.status === 'completed') return order.status;
@@ -305,7 +332,9 @@ export default function AdminDashboard() {
                     <h2 className="admin-section-title">Quản lý Tài Khoản</h2>
                     <p className="admin-section-desc">Danh sách toàn bộ khách hàng và nhân viên.</p>
                   </div>
-                  <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={fetchData} className="admin-btn-refresh">🔄 Làm mới</button>
+                  </div>
                 </div>
 
                 <div className="admin-table-wrap">
@@ -335,10 +364,20 @@ export default function AdminDashboard() {
                                 {u.role?.toUpperCase() || 'USER'}
                               </span>
                             </td>
-                            <td>{u.provider}</td>
+                            <td>{u.authProvider || u.provider || '—'}</td>
                             <td className="admin-td-mono">{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
                             <td>
-                              <button className="btn-text-primary">Sửa</button>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  className="btn-text-primary"
+                                  onClick={() => handleOpenEditUser(u)}
+                                >✏️ Sửa</button>
+                                <button
+                                  className="btn-outline-danger"
+                                  style={{ fontSize: '12px', padding: '4px 10px' }}
+                                  onClick={() => handleDeleteUser(u)}
+                                >🗑️ Xóa</button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -508,12 +547,28 @@ export default function AdminDashboard() {
                               </span>
                             </td>
                             <td>
-                              {t.status === 'pending' && (
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <button onClick={() => handleUpdateStatus(t._id, 'confirmed')} className="btn-outline-success">Duyệt</button>
-                                  <button onClick={() => handleUpdateStatus(t._id, 'cancelled')} className="btn-outline-danger">Hủy</button>
-                                </div>
-                              )}
+                              <select
+                                value={t.status}
+                                onChange={(e) => handleUpdateStatus(t._id, e.target.value)}
+                                style={{
+                                  background: '#ffffff',
+                                  color: ROLE_COLORS[t.status] || '#0f172a',
+                                  border: `1px solid ${ROLE_COLORS[t.status] || '#cbd5e1'}`,
+                                  borderRadius: '6px',
+                                  padding: '5px 8px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer',
+                                  minWidth: '130px'
+                                }}
+                              >
+                                <option value="pending">Chờ duyệt</option>
+                                <option value="confirmed">Đã xác nhận</option>
+                                <option value="paid">Đã thanh toán</option>
+                                <option value="upcoming">⚡ Sắp tới</option>
+                                <option value="completed">Hoàn thành</option>
+                                <option value="cancelled">Đã hủy</option>
+                              </select>
                             </td>
                           </tr>
                         ))
@@ -797,6 +852,93 @@ export default function AdminDashboard() {
                 <button type="button" onClick={() => setShowPkgModal(false)} className="admin-btn-refresh">Hủy</button>
                 <button type="submit" className="admin-btn-refresh" style={{ background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}>
                   {editingPkg ? 'Lưu cập nhật' : 'Tạo gói mới'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════
+          MODAL SỬA NGƯỜI DÙNG
+      ══════════════════════════════ */}
+      {showUserModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: '16px', padding: '32px',
+            width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                ✏️ Chỉnh sửa người dùng
+              </h3>
+              <button onClick={() => setShowUserModal(false)} style={{
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#64748b'
+              }}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                  Họ và tên
+                </label>
+                <input
+                  type="text"
+                  value={userForm.fullName}
+                  onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', background: '#f8fafc', color: '#64748b' }}
+                  readOnly
+                />
+                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0' }}>Email không thể thay đổi để bảo mật tài khoản</p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                  Số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  value={userForm.phone}
+                  onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                  placeholder="09xx xxx xxx"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>
+                  Quyền (Role)
+                </label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
+                >
+                  <option value="user">User — Khách hàng</option>
+                  <option value="admin">Admin — Quản trị viên</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+                <button type="button" onClick={() => setShowUserModal(false)} className="admin-btn-refresh">Hủy</button>
+                <button type="submit" className="admin-btn-refresh" style={{ background: '#dc2626', color: '#fff', borderColor: '#dc2626' }}>
+                  💾 Lưu thay đổi
                 </button>
               </div>
             </form>
