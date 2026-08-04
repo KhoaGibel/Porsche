@@ -168,9 +168,16 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem('isFakeAdmin');
-    signOut(auth);
+    clearToken();
+    setUser(null);
+    useCarStore.getState().setUser(null);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error('Lỗi khi đăng xuất Firebase:', err);
+    }
   };
 
   return {
