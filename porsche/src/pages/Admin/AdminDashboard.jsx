@@ -930,8 +930,9 @@ export default function AdminDashboard() {
                   onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' }}
                 >
-                  <option value="user">User — Khách hàng</option>
-                  <option value="admin">Admin — Quản trị viên</option>
+                  <option value="user">CUSTOMER / USER — Khách hàng</option>
+                  <option value="dealer_manager">DEALER MANAGER — Quản lý đại lý</option>
+                  <option value="admin">SUPER ADMIN — Quản trị viên</option>
                 </select>
               </div>
 
