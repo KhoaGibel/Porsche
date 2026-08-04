@@ -108,13 +108,30 @@ export const firebaseSync = async (req, res) => {
         authProvider: provider ?? 'google',
         isVerified: true, // Google/Facebook đã verify email
       });
-    } else if (!user.firebaseUid) {
-      // Merge tài khoản local với Firebase
-      user.firebaseUid  = firebaseUid;
-      user.authProvider = provider ?? 'google';
-      user.isVerified   = true;
-      if (avatar && !user.avatar) user.avatar = avatar;
-      await user.save({ validateBeforeSave: false });
+    } else {
+      let isModified = false;
+
+      if (!user.firebaseUid) {
+        // Merge tài khoản local với Firebase
+        user.firebaseUid  = firebaseUid;
+        user.authProvider = provider ?? 'google';
+        user.isVerified   = true;
+        isModified = true;
+      }
+      
+      // Đồng bộ fullName và avatar nếu có thay đổi (Firebase là Nguồn chân lý)
+      if (fullName && fullName !== user.fullName) {
+        user.fullName = fullName;
+        isModified = true;
+      }
+      if (avatar && avatar !== user.avatar) {
+        user.avatar = avatar;
+        isModified = true;
+      }
+
+      if (isModified) {
+        await user.save({ validateBeforeSave: false });
+      }
     }
 
     user.lastLoginAt = new Date();

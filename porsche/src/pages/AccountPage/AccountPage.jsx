@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../firebase';
 import useCarStore from '../../store/useCarStore';
-import { paymentAPI } from '../../services/api';
+import { paymentAPI, userAPI } from '../../services/api';
 import './AccountPage.css';
 
 export default function AccountPage() {
@@ -52,6 +52,8 @@ export default function AccountPage() {
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (activeTab === 'orders') {
@@ -75,20 +77,26 @@ export default function AccountPage() {
       const currentUser = auth.currentUser;
       if (currentUser) {
         await updateProfile(currentUser, { displayName: data.fullName });
+        
+        // Cập nhật cả ở Backend
+        await userAPI.updateProfile({ fullName: data.fullName, phone: data.phone });
+
+        // Cập nhật lại zustand
         const storeUser = useCarStore.getState().user;
         if (storeUser) {
           useCarStore.getState().setUser({
             ...storeUser,
             fullName: data.fullName,
+            phone: data.phone
           });
         }
-        alert('Đã cập nhật thông tin thành công!');
-      } else {
-        alert('Đã cập nhật thông tin thành công!');
+        
+        setSuccessMsg('Đã lưu thông tin thành công!');
+        setTimeout(() => setSuccessMsg(''), 3000);
       }
-    } catch (error) {
-      console.error(error);
-      alert('Lỗi cập nhật thông tin. Vui lòng thử lại sau.');
+    } catch (err) {
+      console.error(err);
+      setError('Lỗi cập nhật thông tin.');
     }
   };
 
@@ -165,6 +173,9 @@ export default function AccountPage() {
           {/* ── TAB: THÔNG TIN ── */}
           {activeTab === 'profile' && (
             <form className="account-form" onSubmit={handleProfileSubmit(onUpdateProfile)}>
+              {successMsg && <div className="p-3 mb-4 text-sm text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">{successMsg}</div>}
+              {error && <div className="p-3 mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg">{error}</div>}
+              
               <div className="account-field">
                 <label>Họ và tên</label>
                 <input 
