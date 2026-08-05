@@ -45,20 +45,20 @@ app.use(express.json({ limit: '10kb' }));
 
 
 // ── Chống SPAM / Rate Limiting ──
-// 1. Global Limiter (Áp dụng chung): Tối đa 150 request / 1 phút / IP
+// 1. Global Limiter (Áp dụng chung): Tối đa 500 request / 1 phút / IP
 const globalLimiter = rateLimit({ 
   windowMs: 60 * 1000, // 1 phút
-  max: 150, 
+  max: 500, 
   message: { message: 'Bạn thao tác quá nhanh. Vui lòng chậm lại chút nhé!' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api', globalLimiter);
 
-// 2. Strict Limiter (Cho Auth & Thanh toán): Tối đa 20 request / 1 phút / IP
+// 2. Strict Limiter (Cho Auth & Thanh toán): Tối đa 50 request / 1 phút / IP
 const strictLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 20,
+  max: 50,
   message: { message: 'Quá nhiều yêu cầu thanh toán/đăng nhập. Thử lại sau 1 phút.' }
 });
 

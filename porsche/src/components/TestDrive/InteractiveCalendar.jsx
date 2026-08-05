@@ -55,21 +55,21 @@ export default function InteractiveCalendar({ selectedDate, onSelectDate }) {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] selection:bg-red-600 selection:text-white">
+    <div className="w-full bg-[#1a1a1a] rounded-2xl border border-white/10 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] selection:bg-red-600 selection:text-white">
       {/* HEADER LỊCH */}
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-sm font-bold text-gray-900 tracking-wide capitalize">{formatHeader(currentMonth)}</h3>
+        <h3 className="text-sm font-bold text-white tracking-wide capitalize">{formatHeader(currentMonth)}</h3>
         <div className="flex gap-2">
           <button 
             onClick={prevMonth}
             disabled={currentMonth.getMonth() <= today.getMonth() && currentMonth.getFullYear() <= today.getFullYear()}
-            className="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+            className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"></path></svg>
           </button>
           <button 
             onClick={nextMonth}
-            className="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
           </button>
@@ -98,9 +98,9 @@ export default function InteractiveCalendar({ selectedDate, onSelectDate }) {
               disabled={isPast}
               onClick={() => onSelectDate(dateStr)}
               className={`relative w-full aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition-all duration-200
-                ${isPast ? 'text-gray-300 cursor-not-allowed bg-transparent' : 
+                ${isPast ? 'text-gray-600 cursor-not-allowed bg-transparent' : 
                   isSelected ? 'bg-red-600 text-white shadow-md font-bold scale-105' : 
-                  'bg-transparent text-gray-700 hover:bg-red-50 hover:text-red-600'}
+                  'bg-transparent text-gray-300 hover:bg-red-900/20 hover:text-red-400'}
               `}
             >
               {dateObj.getDate()}
@@ -111,9 +111,9 @@ export default function InteractiveCalendar({ selectedDate, onSelectDate }) {
         })}
       </div>
       
-      <div className="mt-5 flex items-center gap-4 text-[10px] font-medium text-gray-400 border-t border-gray-100 pt-4">
+      <div className="mt-5 flex items-center gap-4 text-[10px] font-medium text-gray-500 border-t border-white/10 pt-4">
         <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-600"></div> Ngày chọn</div>
-        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-gray-200"></div> Không khả dụng</div>
+        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-gray-600"></div> Không khả dụng</div>
       </div>
     </div>
   );

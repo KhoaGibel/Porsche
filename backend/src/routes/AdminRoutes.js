@@ -4,7 +4,8 @@ import {
   updateTestDriveStatus,
   getDashboardStats,
   getAllUsers,
-  getAllOrders
+  getAllOrders,
+  updateUserRole
 } from '../controllers/AdminController.js';
 import { protect, adminOnly } from '../middleware/auth.js'; 
 import {
@@ -20,6 +21,7 @@ router.use(protect, adminOnly);
 
 router.get('/stats', getDashboardStats);
 router.get('/users', getAllUsers);
+router.patch('/users/:id', updateUserRole);
 router.get('/orders', getAllOrders);
 router.get('/test-drives', getAllTestDrives);
 router.patch('/test-drives/:id/status', updateTestDriveStatus);

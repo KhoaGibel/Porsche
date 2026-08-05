@@ -58,6 +58,24 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    
+    if (!['user', 'dealer_manager', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Role không hợp lệ' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, { role }, { new: true }).select('-password');
+    if (!updatedUser) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi cập nhật quyền người dùng', error: error.message });
+  }
+};
+
 // ── 3. Quản lý Đơn Hàng (MySQL) ──
 export const getAllOrders = async (req, res) => {
   try {
@@ -114,7 +132,7 @@ export const updateTestDriveStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['pending', 'confirmed', 'cancelled', 'paid', 'completed'].includes(status)) {
+    if (!['pending', 'pending_payment', 'awaiting_cash', 'confirmed', 'cancelled', 'paid', 'upcoming', 'completed'].includes(status)) {
       return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
     }
 

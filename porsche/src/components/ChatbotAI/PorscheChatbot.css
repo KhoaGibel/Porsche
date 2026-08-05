@@ -33,12 +33,12 @@
   z-index: 99;
   
   /* Kính trắng mờ */
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), 0 0 1px rgba(255,255,255,0.8) inset;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255,255,255,0.2) inset;
   
   display: flex;
   flex-direction: column;
@@ -60,7 +60,7 @@
 /* ── HEADER CHAT ── */
 .chatbot-header {
   padding: 16px 20px;
-  background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #111 0%, #050505 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
@@ -113,13 +113,13 @@
 /* Thông báo cho khách vãng lai */
 .chatbot-notice {
   font-size: 11px;
-  color: #b45309;
-  background: #fef3c7;
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.1);
   padding: 10px 14px;
   border-radius: 12px;
   text-align: center;
-  border: 1px solid #fde68a;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   margin-bottom: 4px;
 }
 
@@ -141,45 +141,49 @@
 /* Tin nhắn của AI (Bên trái, xám nhạt) */
 .message.ai {
   align-self: flex-start;
-  background: #f3f4f6;
-  color: #1f2937;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d1d5db;
   border-bottom-left-radius: 4px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Tin nhắn của User (Bên phải, Đỏ Porsche) */
 .message.user {
   align-self: flex-end;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
   color: #ffffff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  border: 1px solid rgba(220, 38, 38, 0.5);
 }
 
 /* ── KHU VỰC NHẬP LIỆU ── */
 .chatbot-input-area {
   padding: 16px;
-  background: rgba(255, 255, 255, 0.5);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   gap: 12px;
 }
 .chatbot-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 12px 16px;
   font-size: 14px;
-  color: #111111;
+  color: #ffffff;
   outline: none;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.chatbot-input::placeholder {
+  color: #9ca3af;
+}
 .chatbot-input:focus {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
   border-color: #dc2626;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 0 3px rgba(220, 38, 38, 0.3);
 }
 .chatbot-send-btn {
   background: #111111;

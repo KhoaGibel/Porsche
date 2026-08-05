@@ -77,6 +77,9 @@ export const adminAPI = {
   // 🚀 Lấy danh sách Người dùng (từ MongoDB)
   getAllUsers: () => authFetch('/admin/users'),
 
+  // 🚀 Cập nhật quyền Người dùng
+  updateUser: (id, body) => authFetch(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
   // 🚀 Lấy danh sách Đơn hàng / Thanh toán (từ MySQL)
   getAllOrders: () => authFetch('/admin/orders'),
 
