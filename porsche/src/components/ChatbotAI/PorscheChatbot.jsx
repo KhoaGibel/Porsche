@@ -25,7 +25,7 @@ export default function PorscheChatbot() {
         // Khách vãng lai
         setMessages([{ 
           sender: 'ai', 
-          text: 'Chào mừng quý khách đến với Porsche. Tôi có thể giúp gì cho quý khách hôm nay?' 
+          text: 'Xin chào quý khách! Tôi là trợ lý ảo cao cấp của Porsche. Quý khách đang xem dưới tư cách khách vãng lai, lịch sử trò chuyện sẽ không được lưu lại sau khi tải lại trang. Tôi có thể hỗ trợ quý khách thông tin về các dòng xe hoặc gói lái thử nào hôm nay?' 
         }]);
       }
     };
@@ -95,6 +95,11 @@ export default function PorscheChatbot() {
         </div>
 
         <div className="chatbot-messages">
+          {!user && (
+            <div className="chatbot-notice">
+              ⚠️ Lưu ý: Quý khách chưa đăng nhập. Lịch sử cuộc trò chuyện sẽ bị mất sau khi tải lại trang.
+            </div>
+          )}
           {messages.map((msg, index) => (
             <div key={index} className={`message ${msg.sender}`}>
               {msg.text}

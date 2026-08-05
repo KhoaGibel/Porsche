@@ -14,7 +14,7 @@ const GENERATIONS = [
 
 export default function PorscheHeritage({ id }) {
   return (
-    <section id={id} className="relative w-full min-h-[100dvh] pt-[80px] bg-transparent flex flex-col justify-center overflow-hidden">
+    <section id={id} className="relative w-full min-h-[100dvh] pt-[140px] md:pt-[180px] bg-transparent flex flex-col justify-center overflow-hidden">
       
       {/* Background Decor - Optimized (No CSS Blur) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
