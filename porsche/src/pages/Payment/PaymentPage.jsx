@@ -105,7 +105,8 @@ export default function PaymentPage() {
  
   // Nhận data từ trang trước (ShopPage truyền qua state)
   const booking = location.state ?? {};
-  const plan     = PLANS.find(p => p.id === booking.planId) ?? PLANS[1];
+  // Nếu có truyền full object `plan` từ TestDriveShop thì dùng luôn, không thì lấy từ PLANS mẫu
+  const plan     = booking.plan ?? PLANS.find(p => p.id === booking.planId) ?? PLANS[1];
   const ins      = INSURANCE[booking.insuranceId ?? plan.defaultInsurance];
   const total    = plan.price + (ins?.price ?? 0);
  

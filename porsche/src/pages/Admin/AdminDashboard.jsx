@@ -94,21 +94,17 @@ export default function AdminDashboard() {
     }
   }, [activeMenu, ability]);
 
-  // ── Quản lý Gói Subscription (CRUD với LocalStorage) ──
-  const DEFAULT_PACKAGES = [
-    { id: 'essential', name: 'Essential', car: 'Porsche 911 GT3', duration: '60 phút', features: '1 buổi lái thử 60 phút, Xe Porsche 911 GT3, Huấn luyện viên đi kèm, Bảo hiểm TNDS cơ bản, Chứng chỉ lái thử', price: 50000000, status: 'Đang mở bán' },
-    { id: 'performance', name: 'Performance', car: 'Porsche 911 GT3 RS', duration: '90 phút', features: '2 buổi lái thử 90 phút, Toàn bộ dòng xe, Huấn luyện viên chuyên nghiệp, Bảo hiểm tiêu chuẩn, Video HD + ảnh kỷ niệm, Lái thử trên track đua', price: 75000000, status: 'Đang mở bán' },
-    { id: 'elite', name: 'Elite', car: 'Porsche 911 Turbo S', duration: 'Trọn ngày', features: 'Lái thử trọn ngày (8 giờ), Toàn bộ dòng xe không giới hạn, HLV cá nhân Porsche Sport Driving School, Bảo hiểm cao cấp, Video onboard + drone footage, VIP lounge', price: 100000000, status: 'Đang mở bán' },
-  ];
+  const [packages, setPackages] = useState([]);
 
-  const [packages, setPackages] = useState(() => {
+  // Hàm load packages từ API (có thể gọi trong fetchData)
+  const fetchPackages = async () => {
     try {
-      const saved = localStorage.getItem('porsche_admin_packages');
-      return saved ? JSON.parse(saved) : DEFAULT_PACKAGES;
-    } catch {
-      return DEFAULT_PACKAGES;
+      const res = await adminAPI.getAllPlans();
+      setPackages(Array.isArray(res) ? res : res?.data || res || []);
+    } catch (err) {
+      console.error('Lỗi load packages:', err);
     }
-  });
+  };
 
   const [showPkgModal, setShowPkgModal] = useState(false);
   const [editingPkg, setEditingPkg] = useState(null);
@@ -116,9 +112,18 @@ export default function AdminDashboard() {
     name: '', car: 'Porsche 911 GT3 RS', duration: '', features: '', price: '', status: 'Đang mở bán'
   });
 
-  const savePackagesToStorage = (updatedList) => {
-    setPackages(updatedList);
-    localStorage.setItem('porsche_admin_packages', JSON.stringify(updatedList));
+  const savePackagesToStorage = async (pkgFormToSave, isEdit) => {
+    try {
+      if (isEdit) {
+        await adminAPI.updatePlan(editingPkg._id || editingPkg.id, pkgFormToSave);
+      } else {
+        await adminAPI.createPlan(pkgFormToSave);
+      }
+      fetchPackages();
+    } catch (error) {
+      alert('Có lỗi xảy ra khi lưu gói!');
+      console.error(error);
+    }
   };
 
   const handleOpenAddPkg = () => {
@@ -133,10 +138,14 @@ export default function AdminDashboard() {
     setShowPkgModal(true);
   };
 
-  const handleDeletePkg = (pkgId) => {
+  const handleDeletePkg = async (pkgId) => {
     if (!window.confirm('Bạn có chắc muốn xóa gói trải nghiệm này?')) return;
-    const updated = packages.filter(p => p.id !== pkgId);
-    savePackagesToStorage(updated);
+    try {
+      await adminAPI.deletePlan(pkgId);
+      fetchPackages();
+    } catch (error) {
+      alert('Có lỗi xảy ra khi xóa gói!');
+    }
   };
 
   const handleSavePkgSubmit = (e) => {
@@ -146,22 +155,22 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (editingPkg) {
-      const updated = packages.map(p => p.id === editingPkg.id ? { ...p, ...pkgForm, price: Number(pkgForm.price) } : p);
-      savePackagesToStorage(updated);
-    } else {
-      const newPkg = {
-        id: Date.now(),
-        ...pkgForm,
-        price: Number(pkgForm.price)
-      };
-      savePackagesToStorage([...packages, newPkg]);
-    }
+    const planData = {
+      ...pkgForm,
+      price: Number(pkgForm.price),
+      planId: pkgForm.name.toLowerCase().replace(/\s+/g, '-'),
+      duration: pkgForm.duration || '60 phút',
+      cars: pkgForm.car ? [pkgForm.car] : ['Porsche 911 GT3'],
+      features: pkgForm.features ? pkgForm.features.split(',').map(f => ({ text: f.trim(), ok: true })) : []
+    };
+
+    savePackagesToStorage(planData, !!editingPkg);
     setShowPkgModal(false);
   };
 
   useEffect(() => {
     fetchData();
+    fetchPackages();
   }, [fetchData]);
 
   if (!ability.can('read', 'Dashboard')) {
@@ -719,15 +728,17 @@ export default function AdminDashboard() {
                         <tr><td colSpan="7" className="text-center p-12 text-slate-500 text-sm border-dashed">Chưa có gói trải nghiệm nào.</td></tr>
                       ) : (
                         packages.map((p) => (
-                          <tr key={p.id} className="group transition-colors">
+                          <tr key={p._id || p.id} className="group transition-colors">
                             <td className={`${tdClass} font-extrabold text-slate-900`}>{p.name}</td>
                             <td className={tdClass}>
                               <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700">
-                                {p.car}
+                                {Array.isArray(p.cars) ? p.cars.join(', ') : (p.car || 'Porsche 911 GT3')}
                               </span>
                             </td>
                             <td className={`${tdClass} font-medium text-slate-700`}>{p.duration}</td>
-                            <td className={`${tdClass} text-[12.5px] leading-relaxed text-slate-600 max-w-[250px]`}>{p.features}</td>
+                            <td className={`${tdClass} text-[12.5px] leading-relaxed text-slate-600 max-w-[250px]`}>
+                              {Array.isArray(p.features) ? p.features.map(f => f.text).join(', ') : p.features}
+                            </td>
                             <td className={`${tdClass} font-black text-red-600 tracking-tight text-[15px]`}>{Number(p.price).toLocaleString('vi-VN')} ₫</td>
                             <td className={tdClass}>
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${p.status === 'Đang mở bán' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
@@ -737,7 +748,7 @@ export default function AdminDashboard() {
                             <td className={tdClass}>
                               <div className="flex gap-2">
                                 <button onClick={() => handleOpenEditPkg(p)} className={btnSuccessClass}>✏️ Sửa</button>
-                                <button onClick={() => handleDeletePkg(p.id)} className={btnDangerClass}>🗑️ Xóa</button>
+                                <button onClick={() => handleDeletePkg(p._id || p.id)} className={btnDangerClass}>🗑️ Xóa</button>
                               </div>
                             </td>
                           </tr>

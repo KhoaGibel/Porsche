@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { userAPI } from '../../services/api';
-import { PLANS, INSURANCE, SHOWROOMS, TIME_SLOTS, fmt } from '../../data/testDrivePlans';
+import { userAPI, planAPI } from '../../services/api';
+import { INSURANCE, SHOWROOMS, TIME_SLOTS, fmt } from '../../data/testDrivePlans';
 import useCarStore from '../../store/useCarStore';
 import { useAuth } from '../../hooks/useAuth';
 import InteractiveCalendar from '../../components/TestDrive/InteractiveCalendar';
@@ -35,9 +35,42 @@ export default function TestDriveShop() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [showLoginGate, setShowLoginGate] = useState(false);
+  const [dbPlans, setDbPlans] = useState([]);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await planAPI.getPublicPlans();
+        const apiPlans = Array.isArray(res) ? res : res.data || [];
+        // Chuyển đổi dữ liệu trả về giống định dạng PLANS cũ
+        const mappedPlans = apiPlans.map((p, idx) => ({
+          id: p.planId || String(p._id),
+          name: p.name,
+          price: Number(p.price),
+          color: p.color || (idx === 0 ? '#6b7280' : idx === 1 ? '#dc2626' : '#d4af37'),
+          highlight: p.highlight || (idx === 1),
+          badge: p.badge || (idx === 1 ? 'Phổ biến nhất' : idx === 2 ? 'VIP' : undefined),
+          duration: p.duration || '60 phút',
+          location: p.location || 'Showroom Porsche',
+          tagline: p.tagline || 'Gói trải nghiệm lái thử Porsche',
+          cars: Array.isArray(p.cars) ? p.cars : [p.car || 'Porsche 911 GT3'],
+          defaultInsurance: p.defaultInsurance || (idx === 0 ? 'basic' : idx === 1 ? 'standard' : 'premium'),
+          features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
+            { text: 'Bảo hiểm tiêu chuẩn', ok: true },
+            { text: 'Huấn luyện viên chuyên nghiệp', ok: true }
+          ],
+          status: p.status || 'Đang mở bán'
+        }));
+        setDbPlans(mappedPlans);
+      } catch (err) {
+        console.error('Lỗi lấy gói lái thử:', err);
+      }
+    };
+    fetchPlans();
+  }, []);
 
   // -- CALCULATIONS --
-  const plan = PLANS.find((p) => p.id === selectedPlan);
+  const plan = dbPlans.find((p) => p.id === selectedPlan);
   const ins = INSURANCE[selectedIns] ?? Object.values(INSURANCE)[0];
   const totalPrice = (plan?.price ?? 0) + (ins?.price ?? 0);
 
@@ -53,7 +86,7 @@ export default function TestDriveShop() {
       setShowLoginGate(true);
       return;
     }
-    const p = PLANS.find((x) => x.id === planId);
+    const p = dbPlans.find((x) => x.id === planId);
     setSelectedPlan(planId);
     setSelectedIns(p.defaultInsurance);
     setStep(1);
@@ -217,7 +250,7 @@ export default function TestDriveShop() {
         {/* BƯỚC 0: CHỌN GÓI */}
         {step === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-            {PLANS.map((p, i) => (
+            {dbPlans.map((p, i) => (
               <motion.div 
                 key={p.id}
                 onClick={() => handleSelectPlan(p.id)}
@@ -390,6 +423,7 @@ export default function TestDriveShop() {
                   navigate('/payment', {
                     state: {
                       planId: selectedPlan,
+                      plan: plan,
                       insuranceId: selectedIns,
                       date,
                       time,
@@ -497,7 +531,7 @@ export default function TestDriveShop() {
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl mx-auto mb-4">🔒</div>
               <h2 className="text-lg font-bold text-gray-900 mb-2">Đăng nhập để tiếp tục</h2>
               <p className="text-xs text-gray-500 leading-relaxed mb-6">
-                Bạn cần có tài khoản để đặt lịch gói <strong style={{ color: PLANS.find(p => p.id === selectedPlan)?.color || '#111' }}>{PLANS.find(p => p.id === selectedPlan)?.name}</strong>.
+                Bạn cần có tài khoản để đặt lịch gói <strong style={{ color: dbPlans.find(p => p.id === selectedPlan)?.color || '#111' }}>{dbPlans.find(p => p.id === selectedPlan)?.name}</strong>.
               </p>
               
               <div className="flex flex-col gap-2.5">

@@ -89,6 +89,19 @@ export const adminAPI = {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
+
+  // QUẢN LÝ GÓI (PLANS)
+  getAllPlans: () => authFetch('/admin/plans'),
+  createPlan: (body) => authFetch('/admin/plans', { method: 'POST', body: JSON.stringify(body) }),
+  updatePlan: (id, body) => authFetch(`/admin/plans/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deletePlan: (id) => authFetch(`/admin/plans/${id}`, { method: 'DELETE' }),
+};
+
+// ─────────────────────────────────────────────
+// PLANS (Public)
+// ─────────────────────────────────────────────
+export const planAPI = {
+  getPublicPlans: () => authFetch('/plans'),
 };
 
 // ─────────────────────────────────────────────

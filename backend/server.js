@@ -10,6 +10,7 @@ import userRoutes         from './src/routes/UserRoutes.js';
 // import { subRouter }      from './src/routes/orderRoutes.js';
 import adminRoutes        from './src/routes/AdminRoutes.js';
 import paymentRoutes      from './src/routes/paymentRoutes.js';
+import planRoutes         from './src/routes/PlanRoutes.js';
 
 const app  = express();
 const PORT = process.env.PORT ?? 5000;
@@ -68,6 +69,7 @@ app.use('/api/users',         userRoutes);
 // app.use('/api/orders',        orderRoutes);
 // app.use('/api/subscriptions', subRouter);
 app.use('/api/payments',      strictLimiter, paymentRoutes);
+app.use('/api/plans',         planRoutes);
 
 app.use('/api/admin',         adminRoutes); 
 
