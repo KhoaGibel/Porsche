@@ -6,20 +6,18 @@ import { useAuth } from '../../hooks/useAuth';
 import { paymentAPI } from '../../services/api';
 import { PLANS, INSURANCE, fmt, TIME_SLOTS, SHOWROOMS } from '../../data/testDrivePlans';
 import './PaymentPage.css';
+
+import visaLogo from '../../assets/1.png';
+import vnpayLogo from '../../assets/2.png';
+import momoLogo from '../../assets/3.jpg';
  
 // SVG logos inline cho các phương thức thanh toán
 const LOGOS = {
   momo: (
-    <svg viewBox="0 0 50 50" width="32" height="32">
-      <circle cx="25" cy="25" r="25" fill="#A50064"/>
-      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily="Arial">M</text>
-    </svg>
+    <img src={momoLogo} alt="MoMo" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />
   ),
   vnpay: (
-    <svg viewBox="0 0 80 30" width="56" height="22">
-      <rect width="80" height="30" rx="4" fill="#005BAC"/>
-      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" fontFamily="Arial">VNPAY</text>
-    </svg>
+    <img src={vnpayLogo} alt="VNPay" style={{ width: 56, height: 22, borderRadius: 4, objectFit: 'contain' }} />
   ),
   atm: (
     <svg viewBox="0 0 50 50" width="32" height="32">
@@ -30,13 +28,7 @@ const LOGOS = {
     </svg>
   ),
   visa: (
-    <svg viewBox="0 0 80 30" width="56" height="22">
-      <rect width="80" height="30" rx="4" fill="#1a1a2e"/>
-      <text x="22" y="20" fill="#FFD700" fontSize="16" fontWeight="bold" fontFamily="Arial" fontStyle="italic">VISA</text>
-      <circle cx="58" cy="15" r="9" fill="#EB001B" opacity="0.9"/>
-      <circle cx="67" cy="15" r="9" fill="#F79E1B" opacity="0.9"/>
-      <ellipse cx="62.5" cy="15" rx="4" ry="9" fill="#FF5F00" opacity="0.9"/>
-    </svg>
+    <img src={visaLogo} alt="Visa" style={{ width: 56, height: 22, borderRadius: 4, objectFit: 'contain', background: 'white' }} />
   ),
   cash: (
     <svg viewBox="0 0 50 50" width="32" height="32">

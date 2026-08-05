@@ -26,11 +26,17 @@ export const sendMessageToGemini = async (userMessage, chatHistory = []) => {
       systemInstruction: SYSTEM_PROMPT,
     });
 
-    
-    const formattedHistory = chatHistory.map((msg) => ({
+    let formattedHistory = chatHistory.map((msg) => ({
       role: msg.sender === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }],
     }));
+
+    // SỬA LỖI QUAN TRỌNG: API của Google Gemini BẮT BUỘC tin nhắn đầu tiên trong lịch sử phải là từ 'user'.
+    // Câu chào mặc định của chatbot là từ 'model' nên sẽ gây lỗi 400 Bad Request nếu gửi lên.
+    // Xóa các tin nhắn 'model' ở đầu mảng lịch sử.
+    while (formattedHistory.length > 0 && formattedHistory[0].role === 'model') {
+      formattedHistory.shift();
+    }
 
     // Bắt đầu phiên chat có giữ trí nhớ
     const chat = model.startChat({

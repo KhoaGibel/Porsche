@@ -3,12 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { userAPI, planAPI } from '../../services/api';
-import { INSURANCE, SHOWROOMS, TIME_SLOTS, fmt } from '../../data/testDrivePlans';
+import { INSURANCE, SHOWROOMS, TIME_SLOTS, fmt, PLANS } from '../../data/testDrivePlans';
 import useCarStore from '../../store/useCarStore';
 import { useAuth } from '../../hooks/useAuth';
 import InteractiveCalendar from '../../components/TestDrive/InteractiveCalendar';
 import ShowroomMap from '../../components/TestDrive/ShowroomMap';
-import TestDriveShowcase from '../../components/TestDrive/TestDriveShowcase';
 
 const STEPS = ['Chọn gói', 'Bảo hiểm', 'Đặt lịch', 'Xác nhận'];
 
@@ -62,9 +61,14 @@ export default function TestDriveShop() {
           ],
           status: p.status || 'Đang mở bán'
         }));
-        setDbPlans(mappedPlans);
+        if (mappedPlans.length > 0) {
+          setDbPlans(mappedPlans);
+        } else {
+          setDbPlans(PLANS);
+        }
       } catch (err) {
         console.error('Lỗi lấy gói lái thử:', err);
+        setDbPlans(PLANS);
       }
     };
     fetchPlans();
@@ -196,9 +200,6 @@ export default function TestDriveShop() {
       >
         ← <span className="hidden md:inline">Quay lại Showroom</span>
       </Link>
-
-      {/* TÍCH HỢP PORSCHE EXPERIENCE SHOWCASE TRƯỚC KHI VÀO BOOKING */}
-      <TestDriveShowcase />
 
       {/* ── WIZARD HEADER (DARK MODE) ── */}
       <div className="relative w-full py-16 px-4 md:px-8 bg-[#111111] border-b border-white/10 mt-10">

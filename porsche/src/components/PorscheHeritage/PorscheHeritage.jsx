@@ -2,14 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const GENERATIONS = [
-  { year: '1963', model: '911 (901)', desc: 'Sự ra đời của một biểu tượng. Khởi đầu với thiết kế đuôi dốc và động cơ Boxer 6 xy-lanh.', img: 'https://images.unsplash.com/photo-1611651338412-8403fa6e3599?q=80&w=800&auto=format&fit=crop' },
-  { year: '1973', model: 'G-Series', desc: 'Thế hệ kéo dài nhất (15 năm), đặc trưng bởi cản va chống sốc theo chuẩn Mỹ.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png' },
-  { year: '1988', model: 'Type 964', desc: 'Thay đổi 85% bộ phận mới, hệ dẫn động 4 bánh toàn thời gian lần đầu xuất hiện.', img: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?q=80&w=800&auto=format&fit=crop' },
-  { year: '1993', model: 'Type 993', desc: 'Thế hệ cuối cùng sử dụng động cơ tản nhiệt bằng không khí (Air-cooled) danh tiếng.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png' },
-  { year: '1997', model: 'Type 996', desc: 'Cuộc cách mạng với động cơ làm mát bằng nước và cụm đèn pha gây tranh cãi.', img: 'https://images.unsplash.com/photo-1544604213-92f72bc8bdf7?q=80&w=800&auto=format&fit=crop' },
-  { year: '2004', model: 'Type 997', desc: 'Trở lại với đèn pha tròn truyền thống, thiết kế tinh tế và mạnh mẽ hơn.', img: 'https://images.unsplash.com/photo-1533230635445-0959fc93b6e8?q=80&w=800&auto=format&fit=crop' },
-  { year: '2011', model: 'Type 991', desc: 'Bước nhảy vọt về khung gầm và vật liệu siêu nhẹ (nhôm và thép cường lực).', img: 'https://images.unsplash.com/photo-1503376713210-9b4335cfa319?q=80&w=800&auto=format&fit=crop' },
-  { year: '2018', model: 'Type 992', desc: 'Kỷ nguyên số hóa. Thiết kế hiện đại nhưng vẫn giữ nguyên linh hồn 911 cổ điển.', img: 'https://images.unsplash.com/photo-1614026480209-cd9934144671?q=80&w=800&auto=format&fit=crop' },
+  { year: '1963', model: '911 (901)', desc: 'Sự ra đời của một biểu tượng. Khởi đầu với thiết kế đuôi dốc và động cơ Boxer 6 xy-lanh.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png' },
+  { year: '1973', model: 'G-Series', desc: 'Thế hệ kéo dài nhất (15 năm), đặc trưng bởi cản va chống sốc theo chuẩn Mỹ.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png' },
+  { year: '1988', model: 'Type 964', desc: 'Thay đổi 85% bộ phận mới, hệ dẫn động 4 bánh toàn thời gian lần đầu xuất hiện.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg' },
+  { year: '1993', model: 'Type 993', desc: 'Thế hệ cuối cùng sử dụng động cơ tản nhiệt bằng không khí (Air-cooled) danh tiếng.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg' },
+  { year: '1997', model: 'Type 996', desc: 'Cuộc cách mạng với động cơ làm mát bằng nước và cụm đèn pha gây tranh cãi.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png' },
+  { year: '2004', model: 'Type 997', desc: 'Trở lại với đèn pha tròn truyền thống, thiết kế tinh tế và mạnh mẽ hơn.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png' },
+  { year: '2011', model: 'Type 991', desc: 'Bước nhảy vọt về khung gầm và vật liệu siêu nhẹ (nhôm và thép cường lực).', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg' },
+  { year: '2018', model: 'Type 992', desc: 'Kỷ nguyên số hóa. Thiết kế hiện đại nhưng vẫn giữ nguyên linh hồn 911 cổ điển.', img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg' },
 ];
 
 export default function PorscheHeritage({ id }) {

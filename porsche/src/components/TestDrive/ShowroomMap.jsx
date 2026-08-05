@@ -76,7 +76,7 @@ export default function ShowroomMap({ selectedShowroom, onSelectShowroom }) {
         {/* ẢNH SHOWROOM */}
         <div className="w-full h-32 md:h-40 bg-black mt-6 rounded-xl overflow-hidden relative border border-white/10">
            {/* Fallback image if real image not available */}
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-70 mix-blend-luminosity"></div>
+          <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg')] bg-cover bg-center opacity-70 mix-blend-luminosity"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#111] to-transparent"></div>
           <div className="absolute bottom-3 left-4 text-white text-[10px] font-bold tracking-widest uppercase opacity-80">
             Trải nghiệm đẳng cấp

@@ -9,7 +9,7 @@ const GENERATIONS = [
     years: '1963 - 1973',
     desc: 'Huyền thoại bắt đầu. Sự ra đời của thiết kế fastback và động cơ flat-six làm mát bằng không khí.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
-    bg: 'https://images.unsplash.com/photo-1584345604476-8f5e305e94be?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg',
   },
   {
     id: '930',
@@ -17,7 +17,7 @@ const GENERATIONS = [
     years: '1975 - 1989',
     desc: 'Kỷ nguyên Turbo. Chiếc siêu xe thực thụ đầu tiên của Porsche với cánh gió "Whale Tail" khét tiếng.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
-    bg: 'https://images.unsplash.com/photo-1503371477314-220078028731?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg',
   },
   {
     id: '964',
@@ -25,7 +25,7 @@ const GENERATIONS = [
     years: '1989 - 1993',
     desc: 'Cú nhảy vọt về công nghệ với hệ dẫn động 4 bánh toàn thời gian (Carrera 4) và phanh ABS.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
-    bg: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
   },
   {
     id: '993',
@@ -33,7 +33,7 @@ const GENERATIONS = [
     years: '1993 - 1998',
     desc: 'Đỉnh cao và cũng là dấu chấm hết cho kỷ nguyên động cơ làm mát bằng không khí. Tuyệt tác thiết kế.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
-    bg: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
   },
   {
     id: '996',
@@ -41,7 +41,7 @@ const GENERATIONS = [
     years: '1997 - 2005',
     desc: 'Cuộc cách mạng gây tranh cãi: Động cơ làm mát bằng nước và đèn pha "trứng chiên" (Fried egg).',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
-    bg: 'https://images.unsplash.com/photo-1503371477314-220078028731?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg',
   },
   {
     id: '997',
@@ -49,7 +49,7 @@ const GENERATIONS = [
     years: '2004 - 2012',
     desc: 'Sự trở lại của đèn pha tròn cổ điển, kết hợp với hộp số ly hợp kép PDK huyền thoại.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
-    bg: 'https://images.unsplash.com/photo-1584345604476-8f5e305e94be?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782716134/wp15616912-porsche-911-9922-turbo-s-wallpapers_ladgqq.jpg',
   },
   {
     id: '991',
@@ -57,7 +57,7 @@ const GENERATIONS = [
     years: '2011 - 2019',
     desc: 'Khung gầm hoàn toàn mới, thân xe bằng nhôm siêu nhẹ, mở ra kỷ nguyên kỹ thuật số.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
-    bg: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
   },
   {
     id: '992',
@@ -65,7 +65,7 @@ const GENERATIONS = [
     years: '2018 - Nay',
     desc: 'Biểu tượng hiện đại. Nhanh hơn, rộng hơn, thông minh hơn với thiết kế đèn dải LED vắt ngang.',
     image: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
-    bg: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?q=80&w=1000&auto=format&fit=crop',
+    bg: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg',
   },
 ];
 

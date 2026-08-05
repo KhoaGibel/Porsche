@@ -42,15 +42,12 @@ function InViewWrapper({ children, margin = "600px", triggerDelay = 0 }) {
   const [isTriggered, setIsTriggered] = useState(false);
 
   useEffect(() => {
-    if (isInView) setIsTriggered(true);
-  }, [isInView]);
-
-  useEffect(() => {
-    if (triggerDelay > 0) {
-      const timer = setTimeout(() => setIsTriggered(true), triggerDelay);
-      return () => clearTimeout(timer);
+    let timer;
+    if (isInView && !isTriggered) {
+      timer = setTimeout(() => setIsTriggered(true), triggerDelay > 0 ? triggerDelay : 0);
     }
-  }, [triggerDelay]);
+    return () => clearTimeout(timer);
+  }, [isInView, triggerDelay, isTriggered]);
 
   return <div ref={ref} className="w-full h-full">{isTriggered ? children : null}</div>;
 }
@@ -147,7 +144,7 @@ export default function App() {
     }, 350);
   };
 
-  const customVideoCover = "https://images.unsplash.com/photo-1611821064430-0d40291d0f0f?q=80&w=2000&auto=format&fit=crop";
+  const customVideoCover = gt3rsImageUrl;
 
   return (
     // Bỏ màu nền ở thẻ bao ngoài cùng

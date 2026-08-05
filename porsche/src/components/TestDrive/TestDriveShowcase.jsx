@@ -5,41 +5,41 @@ const SHOWCASE_DATA = [
   {
     id: 'gt3rs',
     name: '911 GT3 RS',
-    tagline: 'Thuần Đường Đua',
-    desc: 'Sinh ra tại cơ sở đua xe thể thao Flacht, 911 GT3 RS là chiếc xe tiến gần nhất đến giải đua mô tô thể thao thuần túy. Trang bị động cơ nạp khí tự nhiên 4.0 lít vòng tua cao và thiết kế khí động học được mài dũa qua hàng nghìn giờ trong hầm gió. Nó không chỉ nhanh, nó bẻ cong các định luật vật lý.',
+    tagline: 'Thuần chủng đường đua.',
+    desc: 'Thiết kế khí động học chủ động, cánh gió thiên nga cỡ lớn và động cơ hút khí tự nhiên 525 PS.',
     stats: [
-      { label: 'Downforce', value: '860 kg' },
-      { label: 'Tăng tốc', value: '3.2 s' },
       { label: 'Công suất', value: '525 PS' },
+      { label: 'Tốc độ', value: '296 km/h' },
+      { label: 'Tăng tốc', value: '3.2 s' },
     ],
-    img: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?q=80&w=1200&auto=format&fit=crop',
-    color: '#dc2626' // red
+    img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1782715196/gt3rs-bg_vcobvv.jpg',
+    color: '#ef4444'
   },
   {
     id: 'gt3',
     name: '911 GT3',
-    tagline: 'Cân Bằng Hoàn Hảo',
-    desc: 'Giữ vững truyền thống thuần khiết. 911 GT3 mang linh hồn đường đua vào đường phố. Được trang bị hệ thống treo tay đòn kép phía trước từ 911 RSR và động cơ hút khí tự nhiên gầm rú đến 9.000 vòng/phút, chiếc xe này dành cho những người lái chân chính.',
+    tagline: 'Cảm xúc thăng hoa.',
+    desc: 'Linh hoạt, cân bằng hoàn hảo. Chiếc xe thể thao mang lại cảm giác kết nối trực tiếp với người lái.',
     stats: [
-      { label: 'Vòng tua', value: '9,000 RPM' },
+      { label: 'Công suất', value: '510 PS' },
+      { label: 'Tốc độ', value: '318 km/h' },
       { label: 'Tăng tốc', value: '3.4 s' },
-      { label: 'Công suất', value: '503 PS' },
     ],
-    img: 'https://images.unsplash.com/photo-1503371477314-220078028731?q=80&w=1200&auto=format&fit=crop',
-    color: '#3b82f6' // blue
+    img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492003/gt3_zomfy3.png',
+    color: '#3b82f6'
   },
   {
     id: 'turbos',
     name: '911 Turbo S',
-    tagline: 'Vũ Khí Tối Thượng',
-    desc: 'Hơn 40 năm tiến hóa, Turbo S luôn định nghĩa lại giới hạn của siêu xe dùng hàng ngày. Động cơ Twin-turbo mạnh 650 mã lực, hệ dẫn động 4 bánh toàn thời gian thông minh giúp chiếc xe bứt tốc lên 100km/h chỉ trong 2.7 giây trong khi vẫn giữ được sự êm ái đáng kinh ngạc.',
+    tagline: 'Quyền năng vô tận.',
+    desc: 'Chiếc 911 mạnh mẽ nhất với động cơ tăng áp kép 650 PS, bứt tốc 0-100 km/h chỉ trong 2.7 giây.',
     stats: [
-      { label: 'Mô-men xoắn', value: '800 Nm' },
-      { label: 'Tăng tốc', value: '2.7 s' },
       { label: 'Công suất', value: '650 PS' },
+      { label: 'Tốc độ', value: '330 km/h' },
+      { label: 'Tăng tốc', value: '2.7 s' },
     ],
-    img: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=1200&auto=format&fit=crop',
-    color: '#d4af37' // gold
+    img: 'https://res.cloudinary.com/dq8xgcqhk/image/upload/f_auto,q_auto/v1784492004/image_6_wvqqxb.png',
+    color: '#eab308'
   }
 ];
 
