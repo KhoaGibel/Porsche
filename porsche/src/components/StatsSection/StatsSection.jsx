@@ -153,7 +153,7 @@ export default function StatsSection({ carModel = 'GT3 RS' }) {
   const stats = CAR_STATS[carModel] ?? CAR_STATS['GT3 RS'];
 
   return (
-    <section ref={ref} className="relative min-h-screen bg-transparent flex items-center justify-center overflow-hidden py-24 px-[5%]">
+    <section ref={ref} className="relative min-h-screen bg-transparent flex items-center justify-center overflow-hidden pt-[140px] md:pt-[180px] pb-24 px-[5%]">
       {/* Parallax background line */}
       <motion.div 
         className="absolute top-1/2 left-[-10%] right-[-10%] h-px bg-gradient-to-r from-transparent via-red-600/30 to-transparent"

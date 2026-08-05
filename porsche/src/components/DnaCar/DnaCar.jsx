@@ -85,7 +85,7 @@ export default function DnaCar({ carModel }) {
   };
 
   return (
-    <section ref={ref} className="relative bg-transparent min-h-[100dvh] py-24 px-[5%] flex flex-col justify-center items-center overflow-hidden z-10">
+    <section ref={ref} className="relative bg-transparent min-h-[100dvh] pt-[140px] md:pt-[180px] pb-24 px-[5%] flex flex-col justify-center items-center overflow-hidden z-10">
       
       {/* Noise texture overlay - Removed heavy SVG noise */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.01] bg-white mix-blend-overlay" />

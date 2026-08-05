@@ -9,7 +9,7 @@ export default function HistorySection({ id, bgImage }) {
     <section 
       id={id} 
       // 🎯 ĐÃ SỬA: Dùng grid, xoá bỏ các margin âm
-      className="relative w-full min-h-[100dvh] pt-[80px] pb-24 flex flex-col justify-center items-center overflow-hidden shrink-0"
+      className="relative w-full min-h-[100dvh] pt-[140px] md:pt-[180px] pb-24 flex flex-col justify-center items-center overflow-hidden shrink-0"
     >
       
       {/* ── Nền Parallax ── */}
