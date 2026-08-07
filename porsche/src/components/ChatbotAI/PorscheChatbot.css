@@ -101,14 +101,19 @@
 /* ── KHU VỰC TIN NHẮN ── */
 .chatbot-messages {
   flex: 1;
+  min-height: 0;
   padding: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain; /* Ngăn cuộn trang web khi cuộn hết chat */
 }
-.chatbot-messages::-webkit-scrollbar { width: 4px; }
-.chatbot-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+.chatbot-messages::-webkit-scrollbar { width: 6px; }
+.chatbot-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+.chatbot-messages::-webkit-scrollbar-track { background: transparent; }
 
 /* Thông báo cho khách vãng lai */
 .chatbot-notice {
