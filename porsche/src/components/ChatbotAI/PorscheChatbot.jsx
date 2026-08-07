@@ -56,7 +56,7 @@ export default function PorscheChatbot() {
     setIsLoading(true);
 
     try {
-      // 🚀 GỌI AI THẬT: Truyền câu hỏi của khách và lịch sử chat vào bộ não Gemini
+      // GỌI AI THẬT: Truyền câu hỏi của khách và lịch sử chat vào bộ não Gemini
       const aiResponse = await sendMessageToGemini(userMessage, currentHistory);
 
       const finalMessages = [...newMessages, { sender: 'ai', text: aiResponse }];
@@ -90,7 +90,7 @@ export default function PorscheChatbot() {
         <div className="chatbot-header">
           <div>
             <h3>Porsche AI Assistant</h3>
-            <span className="chatbot-status">● Đang trực tuyến</span>
+            <span className="chatbot-status">Đang trực tuyến</span>
           </div>
         </div>
 
